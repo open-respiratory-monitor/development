@@ -250,7 +250,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.p2.append(p2.pressure*mbar2cmh20)
         # remove any linear trend in the volume data since it's just nonsense.
         # THis should zero it out okay if there's no noticeable "dips"
-        self.vol = signal.detrend(np.cumsum(self.flow))
+        self.vol = signal.detrend(np.cumsum(self.flow)/self.fs)
         
         self.fs = 1/(self.t[-1] - self.t[-2])
         #print('Sample Freq = ',self.fs)
