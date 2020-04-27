@@ -213,3 +213,5 @@ plt.plot(dt,flow_raw)
 plt.plot(dt,np.polyval(select_data_fit,dp))
 
 
+# Save the calibration curve parameters
+np.savetxt('Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from LPS35HW dP (cm H20) to Flow (L/m) from Honeywell AWM720P')
