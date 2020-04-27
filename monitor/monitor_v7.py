@@ -68,7 +68,8 @@ print()
 # flow calibration polynomial
 flow_cal_poly = np.loadtxt('Flow_Calibration.txt',delimiter = '\t',skiprows = 1)
 def dp2flow(dp_cmh20):
-    flow = np.polyval(flow_cal_poly,dp_cmh20)
+    flow_sign = np.sign(dp_cmh20)
+    flow = flow_sign*np.polyval(flow_cal_poly,np.abs(dp_cmh20))
     return flow
 
 def breath_detect_coarse(flow,fs,plotflag = False):
@@ -152,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set the label properties with valid CSS commands -- https://groups.google.com/forum/#!topic/pyqtgraph/jS1Ju8R6PXk
         labelStyle = {'color': '#FFF', 'font-size': '12pt'}
         self.graph0.setLabel('left','P','cmH20',**labelStyle)
-        self.graph1.setLabel('left','Flow','L/s',**labelStyle)
+        self.graph1.setLabel('left','Flow','L/m',**labelStyle)
         self.graph3.setLabel('bottom', 'Time', 's', **labelStyle)
         #self.graph2.setLabel('left', 'V raw','L',**labelStyle)
         self.graph3.setLabel('left','V corr','L',**labelStyle)
