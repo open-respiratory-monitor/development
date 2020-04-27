@@ -250,9 +250,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.p2.append(p2.pressure*mbar2cmh20)
         
         self.fs = 1/(self.t[-1] - self.t[-2])
+        self.fs_min = self.fs*60.0 # need this to scale the integral properly!
         # remove any linear trend in the volume data since it's just nonsense.
         # THis should zero it out okay if there's no noticeable "dips"
-        self.vol = signal.detrend(np.cumsum(self.flow)/self.fs)
+        self.vol = signal.detrend(np.cumsum(self.flow)/self.fs_min)
         
         
         #print('Sample Freq = ',self.fs)
