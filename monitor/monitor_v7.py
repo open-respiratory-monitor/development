@@ -40,6 +40,10 @@ p1 = adafruit_lps35hw.LPS35HW(i2c, address = 93)
 
 p1.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
 p2.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
+p1.low_pass_enabled = True
+p2.low_pass_enabled = True
+
+
 mbar2cmh20 = 1.01972
 
 
