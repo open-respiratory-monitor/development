@@ -57,8 +57,8 @@ class fast_loop(QtCore.QThread):
     """
     
     
-    def __init__(self):
-        QtCore.QThread.__init__(self,sensor)
+    def __init__(self,sensor):
+        QtCore.QThread.__init__(self)
         #self.n = input("  Enter a number to count up to: ")
         self.index = 0
         
