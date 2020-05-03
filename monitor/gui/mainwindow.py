@@ -47,5 +47,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sensor = sensor.sensor()
         
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(sensor)
+        self.fast_loop = data_handler.fast_loop(self.sensor)
+        self.fast_loop.start()
         
