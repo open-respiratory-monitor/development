@@ -47,13 +47,23 @@ from sensor import sensor
 
 class fast_loop(QtCore.QThread):
     
+    """
+    This class gets and updates the data that gets plotted in realtime
+    
+    Needs to take a few things to get started:
+        
+        sensor -- an instance of the sensor class
+    
+    """
+    
+    
     def __init__(self):
         QtCore.QThread.__init__(self,sensor)
         #self.n = input("  Enter a number to count up to: ")
         self.index = 0
         
         sensor.read()
-        
+        print (f" dP = {sensor.dp}")
         
         
     def __del__(self):
