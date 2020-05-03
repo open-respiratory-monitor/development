@@ -62,9 +62,6 @@ class fast_loop(QtCore.QThread):
         #self.n = input("  Enter a number to count up to: ")
         self.index = 0
         
-        sensor.read()
-        print (f" dP = {sensor.dp}")
-        
         
     def __del__(self):
         self.wait()
@@ -75,10 +72,14 @@ class fast_loop(QtCore.QThread):
             #Then it's even
             print("1 Hz Loop: %d" % self.index)
     
+        sensor.read()
+        print (f" dP = {sensor.dp}")
+        self.dt = 1000
+    
     def run(self):
         print("Starting 1 Hz Loop")
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000)
+        self.timer.setInterval(self.dt)
         self.timer.timeout.connect(self.update)
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
