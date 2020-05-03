@@ -55,7 +55,9 @@ class fast_loop(QtCore.QThread):
         sensor -- an instance of the sensor class
     
     """
-    
+    # define a new signal that will be used to send updated data back to the main thread
+    # this signal returns an object that holds the data to ship out to main
+    newdata = QtCore.pyqtSignal(object)
     
     def __init__(self):
         
@@ -79,6 +81,9 @@ class fast_loop(QtCore.QThread):
     
         self.sensor.read()
         print (f" dP = {self.sensor.dp}")
+        
+        # tell the newdata signal to emit every time we update the data
+        self.newdata.emit("Reporting back updated data!")
     
     def run(self):
         print("Starting 1 Hz Loop")
@@ -87,9 +92,11 @@ class fast_loop(QtCore.QThread):
         self.timer.timeout.connect(self.update)
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
+        
         # NOTE: only QThreads have this exec() function, NOT QRunnables
         # If you don't do the exec(), then it won't start up the event loop
         # QThreads have event loops, not QRunnables
+        
         """
         # NOTE: only QThreads have this exec() function, NOT QRunnables
         #       If you don't do the exec(), then it won't start up the event 
