@@ -111,7 +111,7 @@ class fast_loop(QtCore.QThread):
         # debugging: print an update of what we're doing
         if (self.index % 2) == 0:
             #Then it's even
-            print("1 Hz Loop: %d" % self.index)
+            print("fast loop: Index =  %d" % self.index)
             
         # record the update time
         self.time = datetime.utcnow()
@@ -123,13 +123,13 @@ class fast_loop(QtCore.QThread):
         self.data.dp = self.sensor.dp    
         
         # debugging: print the sensor dP
-        print (f" dP = {self.sensor.dp}")
+        print (f"fast loop: dP = {self.sensor.dp}")
         
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.data)
     
     def run(self):
-        print("Starting 1 Hz Loop")
+        print("fast loop: starting fast Loop")
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.dt)
         self.timer.timeout.connect(self.update)
