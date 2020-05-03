@@ -46,6 +46,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Define the pressure sensor class
         self.sensor = sensor.sensor()
         
+        # Test if we can read the sensor:
+        self.sensor.read()
+        print(f" Testing sensor read: dP = {self.sensor.dp}")
+        
         # Start up the fast loop (data acquisition)
         self.fast_loop = data_handler.fast_loop(self.sensor)
         self.fast_loop.start()
