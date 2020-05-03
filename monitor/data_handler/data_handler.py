@@ -52,12 +52,12 @@ class fast_data(object):
     def __init__(self):
         
         # pressures
-        self.data.p1 = 0.0
-        self.data.p2 = 0.0
-        self.data.dp = 0.0
+        self.p1 = 0.0
+        self.p2 = 0.0
+        self.dp = 0.0
         
         # flow
-        self.data.flow = 0.0
+        self.flow = 0.0
         
         # volume
         self.vol = 0.0
