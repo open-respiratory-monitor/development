@@ -36,6 +36,7 @@ import numpy as np
 #import adafruit_lps35hw
 import os
 import sys
+from datetime import datetime
 
 # add the wsp directory to the PATH
 main_path = os.path.dirname(os.getcwd())
@@ -44,7 +45,36 @@ sys.path.insert(1, main_path)
 # import custom modules
 from sensor import sensor
 
+"""
+# Define the fast and slow data objects that will be passed to the GUI thread
+"""
+class fast_data(object):
+    def __init__(self):
+        
+        # pressures
+        self.data.p1 = 0.0
+        self.data.p2 = 0.0
+        self.data.dp = 0.0
+        
+        # flow
+        self.data.flow = 0.0
+        
+        # volume
+        self.vol = 0.0
+        
+        # time
+        self.time = datetime.utcnow()
+        
+        # pi GPIO state
+        self.lowbatt = False
+        self.charging = True
+        
+        
 
+
+"""
+# Define the fast and slow loops
+"""
 class fast_loop(QtCore.QThread):
     
     """
@@ -66,6 +96,8 @@ class fast_loop(QtCore.QThread):
         self.index = 0
         self.dt = 1000
         
+        # Define the instance of the object that will hold all the data
+        self.data = fast_data()
         
         # Set up the sensor
         self.sensor = sensor.sensor()
@@ -75,15 +107,26 @@ class fast_loop(QtCore.QThread):
     
     def update(self):
         self.index +=1
+        
+        # debugging: print an update of what we're doing
         if (self.index % 2) == 0:
             #Then it's even
             print("1 Hz Loop: %d" % self.index)
-    
+            
+        # record the update time
+        self.time = datetime.utcnow()
+        
+        # read the pressure sensor data
         self.sensor.read()
+        self.data.p1 = self.sensor.p1
+        self.data.p2 = self.sensor.p2
+        self.data.dp = self.sensor.dp    
+        
+        # debugging: print the sensor dP
         print (f" dP = {self.sensor.dp}")
         
         # tell the newdata signal to emit every time we update the data
-        self.newdata.emit("Reporting back updated data!")
+        self.newdata.emit(self.data)
     
     def run(self):
         print("Starting 1 Hz Loop")

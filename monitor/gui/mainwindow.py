@@ -49,5 +49,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
         
-    def update_fast_data(self,emitted_object):
-        print(emitted_object)
+    def update_fast_data(self,data):
+        print("Received New Data from Fast Loop!")
+        print(data)
