@@ -42,15 +42,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         super(MainWindow, self).__init__(*args, **kwargs)
         #uic.loadUi('mainwindow.ui', self)  # Load the .ui file
-        
-        # Define the pressure sensor class
-        self.sensor = sensor.sensor()
-        
-        # Test if we can read the sensor:
-        self.sensor.read()
-        print(f" Testing sensor read: dP = {self.sensor.dp}")
+          
         
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(self.sensor)
+        self.fast_loop = data_handler.fast_loop()
         self.fast_loop.start()
         
