@@ -46,7 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
           
         
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(main_path = main_path,verbose = True)
+        self.main_path = main_path
+        self.fast_loop = data_handler.fast_loop(main_path = self.main_path,verbose = True)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
         

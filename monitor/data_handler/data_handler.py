@@ -129,6 +129,9 @@ class fast_loop(QtCore.QThread):
         # run in verbose mode?
         self.verbose = verbose
         
+        # get the main path
+        self.main_path = main_path
+        
         # time to display is the approx time to show on the screen in seconds
         self.time_to_display = time_to_display #s
         
@@ -150,7 +153,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata = fast_data()
         
         # Set up the sensor
-        self.sensor = sensor.sensor(main_path = main_path,verbose = self.verbose)
+        self.sensor = sensor.sensor(main_path = self.main_path,verbose = self.verbose)
         
         # Correction equations:
         # Line to fit the flow drift - will hold polynomial fit parameters
