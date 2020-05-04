@@ -22,7 +22,7 @@ from gui import mainwindow
 
 
 # add the main directory to the PATH
-main_path = os.path.dirname(os.getcwd())
+main_path = os.getcwd()
 sys.path.insert(1, main_path)
 
 def main():
