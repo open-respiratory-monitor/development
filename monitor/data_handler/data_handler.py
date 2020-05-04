@@ -190,9 +190,7 @@ class fast_loop(QtCore.QThread):
         
         if self.verbose:
             # debugging: print an update of what we're doing
-            if (self.index % 2) == 0:
-                #Then it's even
-                print("fast loop: Index =  %d" % self.index)
+            print("fast loop: Index =  %d" % self.index)
             
         # record the update time
         self.time = datetime.utcnow()
@@ -316,9 +314,7 @@ class slow_loop(QtCore.QThread):
     def update(self):
         self.index +=1
         if self.verbose:
-            if (self.index % 2) == 0:
-                #Then it's even
-                print("slowloop: %d" % self.index)
+            print("slowloop: %d" % self.index)
     
         # emit the newdata signal
         self.newdata.emit(self.slowdata)
@@ -329,7 +325,7 @@ class slow_loop(QtCore.QThread):
     
     
     def run(self):
-        print("Starting 1 Hz Loop")
+        print("starting slowloop")
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.dt)
         self.timer.timeout.connect(self.update)
