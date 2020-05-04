@@ -209,7 +209,8 @@ class fast_loop(QtCore.QThread):
         
         if self.verbose:
             # debugging: print the sensor dP
-            print (f"fast loop: dP = {self.sensor.dp}")
+            print (f"fastloop: dP = {self.sensor.dp}")
+            print(f"fastloop: dP array = {self.fastdata.flow}")
             
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
@@ -219,7 +220,7 @@ class fast_loop(QtCore.QThread):
         This updates the volume calibration spline. It's triggered whenever
         the slow loop executes. It does the following:
             1. update the spline curve
-            2. update the min and max times overwhich the calibration applies
+            2. update the min and max times over which the calibration applies
         """
         
         if self.verbose:
