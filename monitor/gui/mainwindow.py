@@ -69,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.newdata.connect(self.update_slow_data)
         self.slow_loop.newdata.connect(self.fast_loop.update_cal)
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
-        self.newrequest.connect(self.slowloop.update_fast_data)
+        self.newrequest.connect(self.slow_loop.update_fast_data)
         
     def update_fast_data(self,data):
         if self.verbose:
