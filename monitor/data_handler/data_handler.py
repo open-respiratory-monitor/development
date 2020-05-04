@@ -168,7 +168,7 @@ class fast_loop(QtCore.QThread):
         self.tcal_max = [] # maximum time overwhich the spline curve applies
         
         
-    def add_new_point(arr,new_point,maxlen):
+    def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
         if len(arr) < maxlen:
