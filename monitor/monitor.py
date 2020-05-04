@@ -31,8 +31,9 @@ def main():
     """
 
     app = QtWidgets.QApplication(sys.argv)
-
-    window = mainwindow.MainWindow(main_path = main_path)
+    print(f"toplevel: main path = {main_path}")
+    window = mainwindow.MainWindow(main_path = main_path,verbose = True)
+    
     window.show()
     app.exec_()
 

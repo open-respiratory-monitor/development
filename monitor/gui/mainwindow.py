@@ -35,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
     monitors.
     """
 
-    def __init__(self, main_path, *args, **kwargs):
+    def __init__(self, main_path, verbose = False,*args, **kwargs):
 
         """
         Initializes the main window for the MVM GUI. See below for subfunction setup description.
@@ -43,10 +43,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         super(MainWindow, self).__init__(*args, **kwargs)
         #uic.loadUi('mainwindow.ui', self)  # Load the .ui file
-          
+         
+        self.verbose = verbose
         
         # Start up the fast loop (data acquisition)
         self.main_path = main_path
+        if self.verbose:
+            print(f"main: main path = {self.main_path}")
         self.fast_loop = data_handler.fast_loop(main_path = self.main_path,verbose = True)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
