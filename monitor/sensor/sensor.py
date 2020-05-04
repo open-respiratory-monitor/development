@@ -119,7 +119,9 @@ class sensor(object):
         # Calculate the flow
         self.flow = self.dp2flow(self.dp)
         
-        
+if __name__ == "__main__":
+    
+    sensor = sensor()       
         
         
         
