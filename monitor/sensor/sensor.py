@@ -63,8 +63,9 @@ class sensor(object):
         self.mbar2cmh20 = 1.01972
 
         # Load the flow calibration polynomial coefficients
+        self.calfile = calfile
         # flow calibration polynomial
-        self.flowcal = np.loadtxt('Flow_Calibration.txt',delimiter = '\t',skiprows = 1)
+        self.flowcal = np.loadtxt(self.calfile,delimiter = '\t',skiprows = 1)
 
         
         # Zero the sensors
