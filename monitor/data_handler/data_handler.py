@@ -214,7 +214,7 @@ class fast_loop(QtCore.QThread):
         if self.verbose:
             # debugging: print the sensor dP
             print (f"fastloop: dP = {self.sensor.dp}")
-            print(f"fastloop: dP array = {self.fastdata.flow}")
+            #print(f"fastloop: dP array = {self.fastdata.flow}")
             
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
@@ -331,7 +331,7 @@ class slow_loop(QtCore.QThread):
     def run(self):
         print("Starting 1 Hz Loop")
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000)
+        self.timer.setInterval(self.dt)
         self.timer.timeout.connect(self.update)
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
