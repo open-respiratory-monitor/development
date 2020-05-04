@@ -35,7 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
     """
     
     # this is a signal that sends fastdata from the mainloop to the slowloop
-    newrequest = QtCore.pyqtSignal(object)
+    request_from_slowloop = QtCore.pyqtSignal(object)
+    request_to_update_cal = QtCore.pyqtSignal(object)
 
     def __init__(self, main_path, verbose = False,*args, **kwargs):
 
@@ -67,9 +68,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop = data_handler.slow_loop(main_path = self.main_path, verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.newdata.connect(self.update_slow_data)
-        self.slow_loop.newdata.connect(self.fast_loop.update_cal)
+        
+        # if the slowloop sends new data, send it to the fastloop
+        self.slow_loop.newdata.connect(self.send_slowloop_data_to_fastloop) # tells mainloop we should send data from the main loop
+        self.request_to_update_cal.connect(self.fast_loop.update_cal)       # sends the slowdata from the mainloop to the fastloop
+        
+        # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
-        self.newrequest.connect(self.slow_loop.update_fast_data)
+        self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
         
     def update_fast_data(self,data):
         if self.verbose:
@@ -85,8 +91,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def slowloop_request(self):
         if self.verbose:
             print(f"main: received request for data from slowloop")
-        self.newrequest.emit(self.fastdata)
+        self.request_from_slowloop.emit(self.fastdata)
         
-        
+    def send_slowloop_data_to_fastloop(self):
+        if self.verbose:
+            print(f"main: sending updated slowloop data to fastloop")
+        self.request_to_update_cal.emit(self.slowdata)
         
         
