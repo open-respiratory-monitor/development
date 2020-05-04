@@ -124,7 +124,7 @@ class sensor(object):
         
 if __name__ == "__main__":
     
-    sensor = sensor()       
+    sensor = sensor(verbose = True)       
         
         
         
