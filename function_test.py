@@ -18,18 +18,12 @@ class thing():
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
-        
-        #throw away everything except the last maxlen points
-    
+
         if len(arr) < maxlen:
-            #print("length okay, just stick on value")
             arr = np.append(arr,new_point)
-            #print("inside loop: arr = ",arr)
         else:
-            #print("hit length limit, trim array")
             arr[:-1] = arr[1:]
             arr[-1] = new_point
-            #print("inside loop: arr = ",arr)
         
         return arr
 

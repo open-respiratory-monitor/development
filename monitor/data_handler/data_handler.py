@@ -228,7 +228,7 @@ class fast_loop(QtCore.QThread):
         """
         
         if self.verbose:
-            print("fastloop: Updating Calibration")
+            print("fastloop: updating calibration")
             
     def correct_vol(self):
         # this uses the current volume minima spline calculation to correct
@@ -276,19 +276,39 @@ class slow_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
     
-    def __init__(self,verbose = False):
+    def __init__(self, main_path, verbose = False):
         QtCore.QThread.__init__(self)
-        #self.n = input("  Enter a number to count up to: ")
-        self.index = 0
         
         # print stuff for debugging?
         self.verbose = verbose
+        
+        # get the main path
+        self.main_path = main_path
+        if self.verbose:
+            print(f"fastloop: main path = {self.main_path}")
+        
+        # run in verbose mode?
+        self.verbose = verbose
+        
+        # this just holds a number which increments every time the loop runs
+        # TODO get rid of this
+        self.index = 0
         
         # set up a place to store the data that comes in from the fast loop each time this loop runs
         self.fastdata = fast_data()
         
         # set up a place to store the slow data that is calculated each time this loop runs
         self.slowdata = slow_data()
+        
+        
+        # time between samples
+        self.dt = 5000 #ms
+        
+        # sample frequency - starts out as 1/self.dt but then is updated to the real fs 
+        self.fs = 1.0/self.dt
+        
+
+        
         
     def __del__(self):
         self.wait()

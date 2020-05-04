@@ -43,17 +43,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
         super(MainWindow, self).__init__(*args, **kwargs)
         #uic.loadUi('mainwindow.ui', self)  # Load the .ui file
-         
+        
+        # run in verbose mode?
         self.verbose = verbose
         
-        # Start up the fast loop (data acquisition)
+        # define the top level main path
         self.main_path = main_path
         if self.verbose:
             print(f"main: main path = {self.main_path}")
-        self.fast_loop = data_handler.fast_loop(main_path = self.main_path,verbose = True)
+        
+        # Start up the fast loop (data acquisition)
+        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, verbose = self.verbose)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
         
+        # start up the slow loop (calculations)
+        self.slow_loop = data_handler.slow_loop(maih_path = self.main_path, verbose = self.verbose)
+        self.slow_loop.start()
+        self.slow_loop.newdata.connect(self.update_slow_data)
+        self.slow_loop.newdata.connect(self.fast_loop.update_cal)
+        
+        
+        
     def update_fast_data(self,data):
-        print("main: Received New Data from Fast Loop!")
-        print(f"main: dP = {data.dp}")
+        print("main: received new data from fastloop!")
+        print(f"main: dP = {data.dp[-1]}")
+        
+    def update_slow_data(self,data):
+        print("main: received new data from slowloop!")
