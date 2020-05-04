@@ -150,7 +150,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata = fast_data()
         
         # Set up the sensor
-        self.sensor = sensor.sensor(verbose = self.verbose)
+        self.sensor = sensor.sensor(main_path = main_path,verbose = self.verbose)
         
         # Correction equations:
         # Line to fit the flow drift - will hold polynomial fit parameters

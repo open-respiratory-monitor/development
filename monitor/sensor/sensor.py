@@ -26,6 +26,7 @@ import os
 main_path = os.path.dirname(os.getcwd())
 sys.path.insert(1, main_path)
 
+
 class sensor(object):
     
     """ 
@@ -38,13 +39,10 @@ class sensor(object):
         dp = differential pressure (p2 - p1) in cmH20
     """
     
-    def __init__(self,calfile = main_path + '/calibration/Flow_Calibration.txt',verbose = False):
+    def __init__(self,main_path, calfile = '/calibration/Flow_Calibration.txt',verbose = False):
         
         # run in verbose mode?
         self.verbose = verbose
-        
-        if self.verbose:
-            print(f"sensor: calfile = {calfile}")
         
         # Initialize the i2c bus
         self.i2c = busio.I2C(board.SCL, board.SDA)
@@ -70,7 +68,9 @@ class sensor(object):
         self.mbar2cmh20 = 1.01972
 
         # Load the flow calibration polynomial coefficients
+        self.main_path = main_path
         self.calfile = calfile
+        
         # flow calibration polynomial
         if self.verbose:
             print(f"trying to load calfile at {calfile}")
@@ -124,7 +124,7 @@ class sensor(object):
         
 if __name__ == "__main__":
     
-    sensor = sensor(verbose = True)       
+    sensor = sensor(main_path = main_path,verbose = True)       
         
         
         
