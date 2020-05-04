@@ -54,19 +54,19 @@ class fast_data(object):
     def __init__(self):
         
         # pressures
-        self.p1 = np.arrary([])
-        self.p2 = np.arrary([])
-        self.dp = np.arrary([])
+        self.p1 = np.array([])
+        self.p2 = np.array([])
+        self.dp = np.array([])
         
         # flow
-        self.flow = np.arrary([])
+        self.flow = np.array([])
         
         # volume
-        self.vol = np.arrary([])
+        self.vol = np.array([])
         
         # time
-        self.time = np.arrary([])
-        self.dt = np.arrary([])
+        self.time = np.array([])
+        self.dt = np.array([])
         
         # pi GPIO state
         self.lowbatt = False
@@ -75,15 +75,16 @@ class fast_data(object):
 class slow_data(object):
     def __init__(self):
         
-        
+        ## THINGS THAT HOLD ARRAYS ##
         # times of the volume min and max
-        self.vmin_times = []
-        self.vmax_times = []
+        self.vmin_times = np.array([])
+        self.vmax_times = np.array([])
         
         # calibrations
-        self.vol_corr_spline = []
-        self.vol_drift_params = []
+        self.vol_corr_spline = np.array([])
+        self.vol_drift_params = np.array([])
         
+        ## THINGS THAT HOLD SINGLE VALUES ##
         # times from the last breath
         self.tsi = [] # start time of inspiration
         self.tei = [] # end time of inspiration
