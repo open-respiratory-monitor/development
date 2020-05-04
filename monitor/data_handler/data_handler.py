@@ -146,7 +146,8 @@ class fast_loop(QtCore.QThread):
         
         # length of vectors
         self.num_samples_to_hold = int(self.time_to_display*1000/self.dt)
-        
+        if self.verbose:
+            print("fastloop: num samples to hold = {self.num_sampels_to_hold}")
         # this just holds a number which increments every time the loop runs
         # TODO get rid of this
         self.index = 0
@@ -172,12 +173,14 @@ class fast_loop(QtCore.QThread):
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
+
         if len(arr) < maxlen:
-            np.append(arr,new_point)
+            arr = np.append(arr,new_point)
         else:
             arr[:-1] = arr[1:]
             arr[-1] = new_point
-
+        
+        return arr
     
     def __del__(self):
         self.wait()
@@ -195,17 +198,18 @@ class fast_loop(QtCore.QThread):
         self.time = datetime.utcnow()
         
         # read the sensor pressure and flow data
+        # there's probably a clenaer way to do this, but oh well...
         self.sensor.read()
-        self.add_new_point(self.fastdata.p1,  self.sensor.p1,   self.num_samples_to_hold)
-        self.add_new_point(self.fastdata.p2,  self.sensor.p2,   self.num_samples_to_hold)
-        self.add_new_point(self.fastdata.dp,  self.sensor.dp,   self.num_samples_to_hold)
-        self.add_new_point(self.fastdata.flow,self.sensor.flow, self.num_samples_to_hold)
+        self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
+        self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
+        self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
+        self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
         
         # calculate the volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
         vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
-        self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
         
         if self.verbose:
             # debugging: print the sensor dP
