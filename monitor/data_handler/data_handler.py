@@ -62,6 +62,7 @@ class fast_data(object):
         self.flow = np.array([])
         
         # volume
+        self.vol_raw = np.array([])
         self.vol = np.array([])
         
         # time
