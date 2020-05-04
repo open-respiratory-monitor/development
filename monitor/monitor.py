@@ -20,6 +20,11 @@ from PyQt5 import QtCore, QtWidgets
 
 from gui import mainwindow
 
+
+# add the main directory to the PATH
+main_path = os.path.dirname(os.getcwd())
+sys.path.insert(1, main_path)
+
 def main():
     """
     Main function.
@@ -27,7 +32,7 @@ def main():
 
     app = QtWidgets.QApplication(sys.argv)
 
-    window = mainwindow.MainWindow()
+    window = mainwindow.MainWindow(main_path = main_path)
     window.show()
     app.exec_()
 

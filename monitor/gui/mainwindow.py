@@ -21,6 +21,7 @@ import sys
 main_path = os.path.dirname(os.getcwd())
 sys.path.insert(1, main_path)
 
+
 # import custom modules
 from sensor import sensor
 from data_handler import data_handler
@@ -34,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
     monitors.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, main_path, *args, **kwargs):
 
         """
         Initializes the main window for the MVM GUI. See below for subfunction setup description.

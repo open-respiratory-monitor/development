@@ -122,7 +122,7 @@ class fast_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
     
-    def __init__(self, main_path = main_path,time_to_display = 20.0,verbose = False):
+    def __init__(self, main_path, time_to_display = 20.0,verbose = False):
         
         QtCore.QThread.__init__(self)
         
