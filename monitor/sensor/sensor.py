@@ -43,6 +43,9 @@ class sensor(object):
         # run in verbose mode?
         self.verbose = verbose
         
+        if self.verbose:
+            print(f"sensor: calfile = {calfile}")
+        
         # Initialize the i2c bus
         self.i2c = busio.I2C(board.SCL, board.SDA)
         
