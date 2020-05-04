@@ -274,6 +274,9 @@ class slow_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
     
+    # this signal sends a request to the mainloop to get the current data from the fastloop
+    request_fastdata = QtCore.pyqtSignal()
+    
     def __init__(self, main_path, verbose = False):
         QtCore.QThread.__init__(self)
         
@@ -315,12 +318,28 @@ class slow_loop(QtCore.QThread):
         self.index +=1
         if self.verbose:
             print("slowloop: %d" % self.index)
-    
+            
+        # emit the request data signal to get the current fastloop data vectors
+        self.request_fastdata.emit()
+            
+        if self.verbose:
+            print(f"slowloop: slowloop.fastdata.dp = {self.fastdata.dp}")    
+            
         # emit the newdata signal
         self.newdata.emit(self.slowdata)
     
     
     
+    
+    #def fit_vol_spline(self):
+        # This         
+    
+    def update_fast_data(self,fastdata):
+        # this is a slot connected to mainwindow.newrequest
+        # this takes the fastdata from the main window and updates the internal value of fastdata
+        if self.verbose:
+            print(f"slowloop: received new fastdata from main")
+        self.fastdata = fastdata
     
     
     
