@@ -58,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fast_loop.newdata.connect(self.update_fast_data)
         
         # start up the slow loop (calculations)
-        self.slow_loop = data_handler.slow_loop(maih_path = self.main_path, verbose = self.verbose)
+        self.slow_loop = data_handler.slow_loop(main_path = self.main_path, verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.newdata.connect(self.update_slow_data)
         self.slow_loop.newdata.connect(self.fast_loop.update_cal)
