@@ -203,7 +203,7 @@ class fast_loop(QtCore.QThread):
         # calculate the volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
-        vol_raw_last = np.sum(self.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
+        vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
         self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
         
         if self.verbose:
