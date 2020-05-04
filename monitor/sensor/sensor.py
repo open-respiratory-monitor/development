@@ -65,6 +65,8 @@ class sensor(object):
         # Load the flow calibration polynomial coefficients
         self.calfile = calfile
         # flow calibration polynomial
+        if self.verbose:
+            print(f"trying to load calfile at {calfile}")
         self.flowcal = np.loadtxt(self.calfile,delimiter = '\t',skiprows = 1)
 
         
