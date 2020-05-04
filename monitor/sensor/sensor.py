@@ -74,7 +74,7 @@ class sensor(object):
         # flow calibration polynomial
         if self.verbose:
             print(f"trying to load calfile at {calfile}")
-        self.flowcal = np.loadtxt(self.calfile,delimiter = '\t',skiprows = 1)
+        self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
 
         
         # Zero the sensors
