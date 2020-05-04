@@ -38,7 +38,11 @@ class sensor(object):
         dp = differential pressure (p2 - p1) in cmH20
     """
     
-    def __init__(self,calfile = main_path + '/calibration/Flow_Calibration.txt'):
+    def __init__(self,calfile = main_path + '/calibration/Flow_Calibration.txt',verbose = False):
+        
+        # run in verbose mode?
+        self.verbose = verbose
+        
         # Initialize the i2c bus
         self.i2c = busio.I2C(board.SCL, board.SDA)
         
