@@ -18,6 +18,13 @@ import board
 import busio
 import adafruit_lps35hw
 import time
+import numpy as np
+import sys
+import os
+
+# add the main directory to the PATH
+main_path = os.path.dirname(os.getcwd())
+sys.path.insert(1, main_path)
 
 class sensor(object):
     
@@ -31,7 +38,7 @@ class sensor(object):
         dp = differential pressure (p2 - p1) in cmH20
     """
     
-    def __init__(self):
+    def __init__(self,calfile = main_path + '/calibration/Flow_Calibration.txt'):
         # Initialize the i2c bus
         self.i2c = busio.I2C(board.SCL, board.SDA)
         
@@ -49,16 +56,26 @@ class sensor(object):
         self.sensor2.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
         self.sensor1.low_pass_enabled = True
         self.sensor2.low_pass_enabled = True
-        
+    
+
+    
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
+
+        # Load the flow calibration polynomial coefficients
+        # flow calibration polynomial
+        self.flowcal = np.loadtxt('Flow_Calibration.txt',delimiter = '\t',skiprows = 1)
+
         
         # Zero the sensors
         self.rezero()
         
         # Initialize the class values
         self.read()
-        
+    def dp2flow(self,dp_cmh20):
+        flow_sign = np.sign(dp_cmh20)
+        flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
+        return flow        
     
     def rezero(self):
         # Zeroes the sensors
@@ -87,11 +104,13 @@ class sensor(object):
         print()
 
     def read(self):
-        # Read the sensors and update the values
+        # Read the pressure sensors and update the values
         self.p1 = self.sensor1.pressure * self.mbar2cmh20
         self.p2 = self.sensor2.pressure * self.mbar2cmh20
         self.dp = self.p2 - self.p1
         
+        # Calculate the flow
+        self.flow = self.dp2flow(self.dp)
         
         
         

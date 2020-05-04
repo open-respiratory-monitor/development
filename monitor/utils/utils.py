@@ -57,3 +57,10 @@ def breath_detect_coarse(flow,fs,plotflag = False):
     """
     #print('found peaks at index = ',peak_index)
     return peak_index
+
+def add_new_point(arr,new_point):
+    # adds a new data point to the array,
+    # and keeps gets rid of the oldest point
+    
+    arr[:-1] = arr[1:]
+    arr[-1] = new_point
