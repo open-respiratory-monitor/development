@@ -147,7 +147,7 @@ class fast_loop(QtCore.QThread):
         # length of vectors
         self.num_samples_to_hold = int(self.time_to_display*1000/self.dt)
         if self.verbose:
-            print("fastloop: num samples to hold = {self.num_sampels_to_hold}")
+            print(f"fastloop: num samples to hold = {self.num_sampels_to_hold}")
         # this just holds a number which increments every time the loop runs
         # TODO get rid of this
         self.index = 0
