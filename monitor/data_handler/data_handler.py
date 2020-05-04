@@ -164,8 +164,8 @@ class fast_loop(QtCore.QThread):
         
         # spline curve to fit the volume minima
         self.vol_corr_spline = []
-        self.tcal_min # minimum time over which the spline curve applies
-        self.tcal_max # maximum time overwhich the spline curve applies
+        self.tcal_min = [] # minimum time over which the spline curve applies
+        self.tcal_max = [] # maximum time overwhich the spline curve applies
         
         
     def add_new_point(arr,new_point,maxlen):
