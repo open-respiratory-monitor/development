@@ -38,6 +38,7 @@ import os
 import sys
 from datetime import datetime
 from scipy import interpolate
+from scipy import integrate
 
 
 # add the wsp directory to the PATH
@@ -241,7 +242,7 @@ class fast_loop(QtCore.QThread):
         #vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
         #vol_raw_last = np.trapz(self.fastdata.flow/(self.fs*60.0))
         #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
-        self.fastdata.vol_raw = np.cumtrapz(self.fastdata.flow)/(self.fs*60.0)
+        self.fastdata.vol_raw = integrate.cumtrapz(self.fastdata.flow)/(self.fs*60.0)
 
         """
         #if self.verbose:
