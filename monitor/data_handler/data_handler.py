@@ -235,9 +235,9 @@ class fast_loop(QtCore.QThread):
         vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
         self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
         
-        if self.verbose:
+        #if self.verbose:
             # debugging: print the sensor dP
-            print (f"fastloop: dP = {self.sensor.dp}")
+            #print (f"fastloop: dP = {self.sensor.dp}")
             #print(f"fastloop: dP array = {self.fastdata.flow}")
         
         # try to correct the volume. this uses the slowdata
@@ -283,7 +283,9 @@ class fast_loop(QtCore.QThread):
                 print("fastloop: no trendline parameters to detrend volume data")
             pass
         
-        else:        
+        else:
+            if self.verbose:
+                print(f"fastloop: trying to apply volume trend eqn, slope = {self.slowdata.vol_drift_params[0], int = {self.slowdata.vol_drift_params[1]}")
             self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
             if self.verbose:
                 print("fastloop: detrended volume")
