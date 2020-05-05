@@ -234,7 +234,8 @@ class fast_loop(QtCore.QThread):
             # low-pass filter the flow
             self.fastdata.flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 0.5,fs = self.fs)       
             self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
-            
+            if self.verbose:
+                print(f"fastloop: filtered flow data")
         except:
             # calculate the raw volume
             # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
