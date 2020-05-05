@@ -80,3 +80,9 @@ def zerophase_lowpass(x,lf,fs):
     x_filt = signal.savgol_filter(x,polyorder = N,window_length = l_lfilter)
     return x_filt
 
+def butter_lowpass(cutoff, fs, order=5):
+    #from here: https://stackoverflow.com/a/25192640
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = signal.butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a

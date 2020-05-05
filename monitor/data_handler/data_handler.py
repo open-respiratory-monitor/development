@@ -52,27 +52,28 @@ from utils import utils
 # Define the fast and slow data objects that will be passed to the GUI thread
 """
 class fast_data(object):
-    def __init__(self):
+    def __init__(self,n_samples = 0):
 
         # pressures
-        self.p1 = np.array([])
-        self.p2 = np.array([])
-        self.dp = np.array([])
+        self.p1 = np.zeros(n_samples)
+        self.p2 = np.zeros(n_samples)
+        self.dp = np.zeros(n_samples)
 
         # flow
-        self.flow = np.array([])
+        self.flow_raw = np.zeros(n_samples)
+        self.flow = np.zeros(n_samples)
 
         # volume
-        self.vol_raw = np.array([])
-        self.vol_trend = np.array([])
-        self.vol_detrend = np.array([])
-        self.v_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
-        self.vol = np.array([])
+        self.vol_raw = np.zeros(n_samples)
+        self.vol_trend = np.zeros(n_samples)
+        self.vol_detrend = np.zeros(n_samples)
+        self.v_drift = np.zeros(n_samples) # the drift volume which is the spline line through the detrended volume
+        self.vol = np.zeros(n_samples)
 
         # time
-        self.t_obj = np.array([]) # datetime object
-        self.dt = np.array([])    # dt since first sample in vector
-        self.t = np.array([])     # ctime in seconds
+        self.t_obj = np.zeros(n_samples) # datetime object
+        self.dt = np.zeros(n_samples)    # dt since first sample in vector
+        self.t = np.zeros(n_samples)   # ctime in seconds
 
         # pi GPIO state
         self.lowbatt = False
@@ -171,7 +172,7 @@ class fast_loop(QtCore.QThread):
 
 
         # Define the instance of the object that will hold all the data
-        self.fastdata = fast_data()
+        self.fastdata = fast_data(n_samples = self.num_samples_to_hold)
         self.slowdata = slow_data()
 
         # Set up the sensor
@@ -229,7 +230,10 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
+        self.fastdata.flow_raw = self.add_new_point(self.fastdata.flow_raw, self.sensor.flow, self.num_samples_to_hold)
+
+        # filter the flowdata
+        self.fastdata.flow = utils.zerophase_lowpass(self.fastdata.flow_raw,0.5,fs = self.fs)
 
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
