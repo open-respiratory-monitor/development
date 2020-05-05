@@ -291,8 +291,8 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_drift_params is None:
             if self.verbose:
                 print("fastloop: no trendline parameters to detrend volume data")
-                self.fastdata.vol_detrend = self.fastdata.vol_raw
-                self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
+            self.fastdata.vol_detrend = self.fastdata.vol_raw
+            self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
 
             pass
 
@@ -308,7 +308,8 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
-                self.fastdata.vol = self.fastdata.vol_raw
+            self.fastdata.vol = self.fastdata.vol_raw
+            self.fastdata.v_drift = self.fastdata.vol_raw
             pass
 
         else:
@@ -485,13 +486,15 @@ class slow_loop(QtCore.QThread):
 
         """
         fastdata_samplerate = 1 / (self.fastdata.dt[-1] - self.fastdata.dt[-2])
-        print(f"slowloop: fastdata_samplerate = {fastdata_samplerate}")
+        if self.verbose:
+            print(f"slowloop: fastdata_samplerate = {fastdata_samplerate}")
 
 
         # step 1: find index of min and max
         self.slowdata.index_of_min = utils.breath_detect_coarse(-1*self.fastdata.vol_detrend, fs = fastdata_samplerate)
         self.slowdata.index_of_max = utils.breath_detect_coarse(self.fastdata.vol_detrend,    fs = fastdata_samplerate)
-
+        if self.verbose:
+            print(f"slowloop: found {len(self.slowdata.index_of_min)} peaks!")
         # step 2:
         self.slowdata.vmin_times = self.fastdata.t[self.slowdata.index_of_min]
         self.slowdata.vmax_times = self.fastdata.t[self.slowdata.index_of_max]

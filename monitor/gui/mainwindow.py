@@ -55,8 +55,8 @@ class MainWindow(QtWidgets.QMainWindow):
             slow_update_time = 1000
             mode_verbose = True
         else:
-            fast_update_time = 50
-            slow_update_time = 2000
+            fast_update_time = 10
+            slow_update_time = 100
             mode_verbose = False
 
         # configuration
@@ -129,7 +129,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # change the plot range
         #self.graph0.setYRange(-30,30,padding = 0.1)
         #self.graph1.setYRange(-2,2,padding = 0.1)
-        #self.graph3.setYRange(-0.5,15,padding = 0.1)
+        self.graph3.setYRange(-1,1,padding = 0.1)
 
         # make a QPen object to hold the marker properties
         pen = pg.mkPen(color = 'y',width = 1)
@@ -140,7 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow, pen = bluepen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol_raw,      pen = pen)
-        self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
+        #self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = 10 #update time of timer in ms
@@ -156,10 +156,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the plots with the new data
 
-        self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
-        self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw) #update the data
-        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_trend)
+        self.data_line1.setData(self.fastdata.t,   self.fastdata.p1)
+        self.data_line2.setData(self.fastdata.t,   self.fastdata.flow)
+        self.data_line3.setData(self.fastdata.t,   self.fastdata.vol_raw) #update the data
+        #self.data_line3b.setData(self.fastdata.t,  self.fastdata.v_drift)
         """
         try:
             fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
