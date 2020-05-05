@@ -132,10 +132,12 @@ class MainWindow(QtWidgets.QMainWindow):
                      
         # make a QPen object to hold the marker properties
         pen = pg.mkPen(color = 'y',width = 1)
+        bluepen = pg.mkPen(color = 'b', width = 2)
         
         # define the curves to plot
         self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = pen)
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
+        self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow, pen = bluepen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol,      pen = pen)
         
         # update the graphs at regular intervals (so it runs in a separate thread!!)
@@ -151,12 +153,12 @@ class MainWindow(QtWidgets.QMainWindow):
     ### gui-related functions
     def update_plots(self):
         # update the plots with the new data
-        flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 10,fs = 1.0/(self.fastdata.dt[-1] - self.fastdata.dt[-2]))
+        flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 1,fs = 1.0/(self.fastdata.dt[-1] - self.fastdata.dt[-2]))
 
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
-        self.data_line2.setData(self.fastdata.dt,   flow_filt)
+        self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
         self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
-        
+        self.data_line2b.setData(self.fastdata.dt, flow_filt)
         
         
     ### slots to handle data transfer between threads ###    
