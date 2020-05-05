@@ -92,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
 
-        """
+        
         ### GUI stuff ###
         self.setWindowTitle("Open Respiratory Monitor")
 
@@ -143,12 +143,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
-        self.t_update = 10 #update time of timer in ms
+        self.t_update = 100 #update time of timer in ms
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
         self.timer.start()
-        """
+        
 
 
     ### gui-related functions
