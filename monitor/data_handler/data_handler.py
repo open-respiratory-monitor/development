@@ -206,7 +206,7 @@ class fast_loop(QtCore.QThread):
         
         if self.verbose:
             # debugging: print an update of what we're doing
-            print("\nslowloop: Index =  %d" % self.index)
+            print("\nfastloop: Index =  %d" % self.index)
             
         # record the update time
         self.update_time = datetime.utcnow()
