@@ -92,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
 
-
+        """
         ### GUI stuff ###
         self.setWindowTitle("Open Respiratory Monitor")
 
@@ -148,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
         self.timer.start()
-
+        """
 
 
     ### gui-related functions
