@@ -283,7 +283,7 @@ class fast_loop(QtCore.QThread):
                 
     def detrend_vol(self):
         # apply the slowloop trend line to the volume signal
-        if self.slowdata.vol_drift_params == None:
+        if self.slowdata.vol_drift_params is None:
             if self.verbose:
                 print("fastloop: no trendline parameters to detrend volume data")
             pass
@@ -296,7 +296,7 @@ class fast_loop(QtCore.QThread):
     def apply_vol_corr(self):
         # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
         
-        if self.slowdata.vol_corr_spline == None:
+        if self.slowdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
             pass
