@@ -143,10 +143,12 @@ class MainWindow(QtWidgets.QMainWindow):
         
     ### gui-related functions
     def update_plots(self):
-        self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
-        self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
-        
+        try:
+            self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
+            self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
+            self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
+        except:
+            pass
         
         
     ### slots to handle data transfer between threads ###    
