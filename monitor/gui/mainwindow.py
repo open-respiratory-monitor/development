@@ -25,6 +25,7 @@ sys.path.insert(1, main_path)
 # import custom modules
 #from sensor import sensor
 from data_handler import data_handler
+from utils import utils
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -150,8 +151,10 @@ class MainWindow(QtWidgets.QMainWindow):
     ### gui-related functions
     def update_plots(self):
         # update the plots with the new data
+        flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 10,fs = 1.0/(self.fastdata.dt[-1] - self.fastdata.dt[-2]))
+
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
-        self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
+        self.data_line2.setData(self.fastdata.dt,   flow_filt)
         self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
         
         
