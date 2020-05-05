@@ -63,6 +63,7 @@ class fast_data(object):
 
         # volume
         self.vol_raw = np.array([])
+        self.vol_trend = np.array([])
         self.vol_detrend = np.array([])
         self.v_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
         self.vol = np.array([])
@@ -291,7 +292,8 @@ class fast_loop(QtCore.QThread):
             pass
 
         else:
-            self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+            self.fastdata.vol_trend = np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+            self.fastdata.vol_detrend = self.fastdata.vol_raw - self.fastdat.vol_trend
             if self.verbose:
                 print("fastloop: detrended volume")
 

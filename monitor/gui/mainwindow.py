@@ -159,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
         self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw) #update the data
-        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_detrend)
+        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_trend)
         """
         try:
             fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
