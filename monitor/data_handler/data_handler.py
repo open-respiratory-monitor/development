@@ -257,7 +257,7 @@ class fast_loop(QtCore.QThread):
         except:
             print("fastloop: could not apply vol spline correction. using raw volume isntead...")
             self.fastdata.vol = self.fastdata.vol_raw
-
+            self.fastdata.v_drift = 0.0*self.fastdata.vol
 
 
         # tell the newdata signal to emit every time we update the data
