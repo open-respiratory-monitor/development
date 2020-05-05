@@ -94,8 +94,8 @@ class slow_data(object):
         self.vmax  = np.array([]) # peaks after applying the spline. this is used for calculating breath params.
         
         # calibrations
-        self.vol_corr_spline = np.array([])
-        self.vol_drift_params = np.array([])
+        self.vol_corr_spline = None
+        self.vol_drift_params = None
                 
         ## THINGS THAT HOLD SINGLE VALUES ##
         # times from the last breath
@@ -278,22 +278,33 @@ class fast_loop(QtCore.QThread):
     
     def detrend_vol(self):
         # apply the slowloop trend line to the volume signal
+        if self.slowdata.vol_drift_params == None:
+            if self.verbose:
+                print("fastloop: no trendline parameters to detrend volume data")
+            pass
         
-        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
-        if self.verbose:
-            print("fastloop: detrended volume")
+        else:        
+            self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
+            if self.verbose:
+                print("fastloop: detrended volume")
     
     def apply_vol_corr(self):
         # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
-                
-        # calculate the drift volume using the spline. because we made the spline interpolate it will work outside the correction
-        self.fastdata.v_drift = self.slowdata.vol_corr_spline(self.fastdata.t)
         
-        # calculate the corrected volume
-        self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
-    
-        if self.verbose:
-            print("slowloop: applied spline volume correction")
+        if self.slowdata.vol_corr_spline == None:
+            if self.verbose:
+                print("fastloop: no spline fit to apply to volume data")
+            pass
+        
+        else:
+            # calculate the drift volume using the spline. because we made the spline interpolate it will work outside the correction
+            self.fastdata.v_drift = self.slowdata.vol_corr_spline(self.fastdata.t)
+            
+            # calculate the corrected volume
+            self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
+        
+            if self.verbose:
+                print("slowloop: applied spline volume correction")
     
     def run(self):
         if self.verbose:
