@@ -92,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
 
-        
+
         ### GUI stuff ###
         self.setWindowTitle("Open Respiratory Monitor")
 
@@ -139,16 +139,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = pen)
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow, pen = bluepen)
-        self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol,      pen = pen)
+        self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol_raw,      pen = pen)
         self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
-        self.t_update = 100 #update time of timer in ms
+        self.t_update = 10 #update time of timer in ms
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
         self.timer.start()
-        
+
 
 
     ### gui-related functions
@@ -158,8 +158,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_detrend) #update the data
-        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.v_drift)
+        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw) #update the data
+        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_detrend)
         """
         try:
             fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
