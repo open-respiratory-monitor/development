@@ -60,12 +60,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slowdata = data_handler.slow_data()
             
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, verbose = self.verbose)
+        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, update_time = 1000, verbose = self.verbose)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
         
         # start up the slow loop (calculations)
-        self.slow_loop = data_handler.slow_loop(main_path = self.main_path, verbose = self.verbose)
+        self.slow_loop = data_handler.slow_loop(main_path = self.main_path, update_time = 3000, verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.newdata.connect(self.update_slow_data)
         
@@ -77,10 +77,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
         
+        
+        
+        
     def update_fast_data(self,data):
         if self.verbose:
             print("main: received new data from fastloop!")
-            print(f"main: dP = {data.dp[-1]}")
+            #print(f"main: dP = {data.dp[-1]}")
         self.fastdata = data
         
     def update_slow_data(self,data):

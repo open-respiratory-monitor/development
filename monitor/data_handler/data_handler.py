@@ -135,7 +135,7 @@ class fast_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
     
-    def __init__(self, main_path, time_to_display = 20.0,verbose = False):
+    def __init__(self, main_path, update_time = 1000, time_to_display = 20.0,verbose = False):
         
         QtCore.QThread.__init__(self)
         
@@ -151,7 +151,7 @@ class fast_loop(QtCore.QThread):
         self.time_to_display = time_to_display #s
         
         # time between samples
-        self.ts = 1000 #ms
+        self.ts = update_time #ms
         
         # real sample rate
         self.ts_real = []
@@ -346,7 +346,7 @@ class slow_loop(QtCore.QThread):
     # this signal sends a request to the mainloop to get the current data from the fastloop
     request_fastdata = QtCore.pyqtSignal()
     
-    def __init__(self, main_path, verbose = False):
+    def __init__(self, main_path, update_time = 5000, verbose = False):
         QtCore.QThread.__init__(self)
         
         # print stuff for debugging?
@@ -372,7 +372,7 @@ class slow_loop(QtCore.QThread):
         
         
         # time between samples
-        self.ts = 5000 #ms
+        self.ts = update_time #ms
         
         # loop sample frequency - starts out as 1/self.ts but then is updated to the real fs 
         self.fs = 1.0/self.ts
