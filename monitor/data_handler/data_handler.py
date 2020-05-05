@@ -233,15 +233,16 @@ class fast_loop(QtCore.QThread):
         try:
             # low-pass filter the flow
             self.fastdata.flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 0.5,fs = self.fs)       
-            self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
+            
             if self.verbose:
                 print(f"fastloop: filtered flow data")
         except:
             # calculate the raw volume
             # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
                 # fs (1/min) = fs (1/s) * 60 (s/min)
-            vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
-            self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+            #vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
+            #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+            self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
             
         #if self.verbose:
             # debugging: print the sensor dP
