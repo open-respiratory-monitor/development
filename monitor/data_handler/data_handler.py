@@ -279,20 +279,21 @@ class fast_loop(QtCore.QThread):
     def detrend_vol(self):
         # apply the slowloop trend line to the volume signal
         
-        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)    
+        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
+        if self.verbose:
+            print("fastloop: detrended volume")
     
     def apply_vol_corr(self):
         # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
-        
-        if self.verbose:
-            print("slowloop: correcting volume")
-        
+                
         # calculate the drift volume using the spline. because we made the spline interpolate it will work outside the correction
         self.fastdata.v_drift = self.slowdata.vol_corr_spline(self.fastdata.t)
         
         # calculate the corrected volume
         self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
     
+        if self.verbose:
+            print("slowloop: applied spline volume correction")
     
     def run(self):
         if self.verbose:
