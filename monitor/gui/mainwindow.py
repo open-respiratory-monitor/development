@@ -38,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
     request_from_slowloop = QtCore.pyqtSignal(object)
     request_to_update_cal = QtCore.pyqtSignal(object)
 
-    def __init__(self, config, main_path, verbose = False,*args, **kwargs):
+    def __init__(self,  config, main_path, mode = 'normal', verbose = False,*args, **kwargs):
 
         """
         Initializes the main window for the MVM GUI. See below for subfunction setup description.
@@ -46,11 +46,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
         super(MainWindow, self).__init__(*args, **kwargs)
         #uic.loadUi('mainwindow.ui', self)  # Load the .ui file
+        
+        # set mode
+        if mode.lower() == 'debug':
+            fast_update_time = 1000
+            slow_update_time = 5000
+            mode_verbose = True
+        else:
+            fast_update_time = 10
+            slow_update_time = 1000
+            mode_verbose = False
+        
         # configuration
         self.config = config
         
-        # run in verbose mode?
-        self.verbose = verbose
+        # run in verbose mode? do this if requested specifically or if running in debug mode
+        self.verbose = (verbose) or (mode_verbose)
         
         # define the top level main path
         self.main_path = main_path
@@ -62,12 +73,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slowdata = data_handler.slow_data()
             
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, update_time = 1000, verbose = self.verbose)
+        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, update_time = fast_update_time, verbose = self.verbose)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
         
         # start up the slow loop (calculations)
-        self.slow_loop = data_handler.slow_loop(main_path = self.main_path, update_time = 3000, verbose = self.verbose)
+        self.slow_loop = data_handler.slow_loop(main_path = self.main_path, update_time = slow_update_time, verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.newdata.connect(self.update_slow_data)
         
