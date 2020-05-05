@@ -71,7 +71,7 @@ class fast_data(object):
         self.vol = np.zeros(n_samples)
 
         # time
-        self.t_obj = np.zeros(n_samples) # datetime object
+        self.t_obj = np.array([]) # datetime object
         self.dt = np.zeros(n_samples)    # dt since first sample in vector
         self.t = np.zeros(n_samples)   # ctime in seconds
 
