@@ -360,17 +360,26 @@ class slow_loop(QtCore.QThread):
         if self.verbose:
             print(f"slowloop: slowloop.fastdata.dp = {self.fastdata.dp}")    
         
-        # find the volume peaks
-        self.find_vol_peaks() 
+        # detrend the volume signal
+        self.detrend_volume()
         
-        # calculate the sline through the volume minima
-        self.calculate_vol_drift_spline()
-        
-        # apply the volume correction
-        self.apply_vol_corr()
-        
-        # calculate breath parameters
-        #self.calculate_breath_params()
+        # try to fit a spline
+        try:
+            # find the volume peaks
+            self.find_vol_peaks() 
+            
+            # calculate the sline through the volume minima
+            self.calculate_vol_drift_spline()
+            
+            # apply the volume correction
+            self.apply_vol_corr()
+            
+            # calculate breath parameters
+            #self.calculate_breath_params()
+        except:
+            if self.verbose:
+                print("slowloop: no breathdetected")
+            
         
         # tell main that there's new slow data: emit the newdata signal
         self.newdata.emit(self.slowdata)
@@ -378,8 +387,7 @@ class slow_loop(QtCore.QThread):
             
     
     def apply_vol_corr(self):
-        # this uses the current volume minima spline calculation to correct
-        # the volume by pinning all the minima to zero
+        # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
         
         if self.verbose:
             print("fastloop: correcting volume")
@@ -391,13 +399,21 @@ class slow_loop(QtCore.QThread):
         self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
         
         
-        
-        
     def calculate_vol_drift_spline(self):
+        # correct the volume signal by ensuring that the lung volume is zero after every breath
         
         # fit a spline to the detrended volume minima
         self.slowdata.vol_corr_spline = interpolate.interp1d(self.slowdata.vmin_times,self.slowdata.vmin_detrend,kind = 'linear',fill_value = 'extrapolate')
         
+    def detrend_volume(self):
+        # fit a line through the volume to get rid of any slow drifts. this helps the plots stay nice if there's no breaths
+        
+        # step 1: calculate the linear drift and spline fits to minimum
+        self.slowdata.vol_drift_params = np.polyfit(self.fastdata.t,self.fastdata.vol_raw,1)
+
+        # step 2: detrend the raw volume
+        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+    
     def find_vol_peaks(self):
         """
         ## find the min and max of the volume signal using peak finder ##
@@ -412,14 +428,9 @@ class slow_loop(QtCore.QThread):
         self.i_valleys = i_valleys
         
         """
-        fastdata_samplerate = 1 / (self.fastdata.dt[-1])
+        fastdata_samplerate = 1 / (self.fastdata.dt[-1] - self.fastdata.dt[-2])
         print(f"slowloop: fastdata_samplerate = {fastdata_samplerate}")
-        
-        # step 1: calculate the linear drift and spline fits to minimum
-        self.slowdata.vol_drift_params = np.polyfit(self.fastdata.t,self.fastdata.vol_raw,1)
-
-        # step 2: detrend the raw volume
-        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+               
         
         # step 1: find index of min and max
         self.slowdata.index_of_min = utils.breath_detect_coarse(-1*self.fastdata.vol_detrend, fs = fastdata_samplerate)
