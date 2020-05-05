@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_verbose = True
         else:
             fast_update_time = 10
-            slow_update_time = 100
+            slow_update_time = 1000
             mode_verbose = False
 
         # configuration
@@ -156,9 +156,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the plots with the new data
 
-        self.data_line1.setData(self.fastdata.t,   self.fastdata.p1)
-        self.data_line2.setData(self.fastdata.t,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.t,   self.fastdata.vol_raw) #update the data
+        self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
+        self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
+        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw) #update the data
         #self.data_line3b.setData(self.fastdata.t,  self.fastdata.v_drift)
         """
         try:
