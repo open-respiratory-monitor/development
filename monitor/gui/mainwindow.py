@@ -140,7 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow, pen = bluepen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol,      pen = pen)
-
+        
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = 10 #update time of timer in ms
