@@ -90,7 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.graph1)
         layout.addWidget(self.graph2)
-        layout.addWidget(self.graph2)
+        layout.addWidget(self.graph3)
         
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
@@ -145,7 +145,7 @@ class MainWindow(QtWidgets.QMainWindow):
             #print(f"main: dP = {data.dp[-1]}")
         self.fastdata = data
         
-        self.updateplots()
+        self.update_plots()
         
         
     def update_slow_data(self,data):
