@@ -249,10 +249,10 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        self.fastdata.flow = self.add_new_point(self.fastdata.flow_raw, self.sensor.flow, self.num_samples_to_hold)
+        self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
 
         # filter the flowdata
-        self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
+        #self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
 
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
