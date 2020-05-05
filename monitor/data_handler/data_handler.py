@@ -285,7 +285,7 @@ class fast_loop(QtCore.QThread):
         
         else:
             if self.verbose:
-                print(f"fastloop: trying to apply volume trend eqn, slope = {self.slowdata.vol_drift_params[0], int = {self.slowdata.vol_drift_params[1]}")
+                print(f"fastloop: trying to apply volume trend eqn, slope = {self.slowdata.vol_drift_params[0]}, int = {self.slowdata.vol_drift_params[1]}")
             self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
             if self.verbose:
                 print("fastloop: detrended volume")
