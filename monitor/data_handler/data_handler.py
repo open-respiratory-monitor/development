@@ -261,9 +261,13 @@ class fast_loop(QtCore.QThread):
 
         # apply the volume spline correction
         self.find_vol_peaks()
-        self.calculate_vol_drift_spline()
-        self.apply_vol_corr()
-
+        if len(self.fastdata.index_of_min) >= 2:
+            self.calculate_vol_drift_spline()
+            self.apply_vol_corr()
+        else:
+            self.vol = self.vol_raw
+            self.v_drift = 0.0*self.vol_raw
+            
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
 
@@ -287,7 +291,7 @@ class fast_loop(QtCore.QThread):
             print(f"fastdata: found {len(self.slowdata.index_of_min)} peaks!")
         # step 2:
         self.fastdata.vmin_times = self.fastdata.t[self.fastdata.index_of_min]
-        self.slowdata.vmin = self.fastdata.vol[self.fastdata.index_of_min]
+        self.fastdata.vmin = self.fastdata.vol[self.fastdata.index_of_min]
 
 
 
@@ -317,11 +321,11 @@ class fast_loop(QtCore.QThread):
             self.fastdata.vol = self.fastdata.vol_detrend - self.fastdata.v_drift
 
             if self.verbose:
-                print("slowloop: applied spline volume correction")
+                print("fastloop: applied spline volume correction")
 
     def run(self):
         if self.verbose:
-            print("fast loop: starting fast Loop")
+            print("fastloop: starting fast Loop")
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.ts)
         self.timer.timeout.connect(self.update)
