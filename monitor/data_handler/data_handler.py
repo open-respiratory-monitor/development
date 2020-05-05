@@ -70,7 +70,7 @@ class fast_data(object):
         self.vol_detrend = np.array([])
         self.v_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
         self.vol = np.array([])
-        
+
         ## THINGS THAT HOLD ARRAYS ##
         #indices of volume min and max
         self.index_of_min = np.array([])
@@ -88,7 +88,7 @@ class fast_data(object):
         # calibrations
         self.vol_corr_spline = None
         self.vol_drift_params = None
-        
+
         # time
         self.t_obj = np.array([]) # datetime object
         self.dt = np.array([])   # dt since first sample in vector
@@ -191,7 +191,7 @@ class fast_loop(QtCore.QThread):
 
 
         # Define the instance of the object that will hold all the data
-        self.fastdata = fast_data(n_samples = self.num_samples_to_hold)
+        self.fastdata = fast_data()
         self.slowdata = slow_data()
 
         # Set up the sensor
@@ -258,15 +258,15 @@ class fast_loop(QtCore.QThread):
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
         self.fastdata.vol_raw = signal.detrend(np.cumsum(self.fastdata.flow)/(self.fs*60.0))
-        
+
         # apply the volume spline correction
         self.find_vol_peaks()
         self.calculate_vol_drift_spline()
         self.apply_vol_corr()
-        
+
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
-    
+
     def find_vol_peaks(self):
         """
         ## find the min and max of the volume signal using peak finder ##
@@ -289,8 +289,8 @@ class fast_loop(QtCore.QThread):
         self.fastdata.vmin_times = self.fastdata.t[self.fastdata.index_of_min]
         self.slowdata.vmin = self.fastdata.vol[self.fastdata.index_of_min]
 
-        
-        
+
+
     def calculate_vol_drift_spline(self):
         # correct the volume signal by ensuring that the lung volume is zero after every breath
 
@@ -300,8 +300,8 @@ class fast_loop(QtCore.QThread):
     def apply_vol_corr(self):
         # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
 
-        
-        
+
+
         if self.fastdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
@@ -318,7 +318,7 @@ class fast_loop(QtCore.QThread):
 
             if self.verbose:
                 print("slowloop: applied spline volume correction")
-    
+
     def run(self):
         if self.verbose:
             print("fast loop: starting fast Loop")
