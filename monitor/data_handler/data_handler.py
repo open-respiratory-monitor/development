@@ -275,7 +275,11 @@ class fast_loop(QtCore.QThread):
             print("fastloop: received updated slowloop data")
             
         self.slowdata = data
-    
+        
+        if self.verbose:
+                print(f"fastloop: volume trend parameters = {self.slowdata.vol_drift_params}")
+                print(f"fastloop: volume spline parameters = {self.slowdata.vol_corr_spline}")
+                
     def detrend_vol(self):
         # apply the slowloop trend line to the volume signal
         if self.slowdata.vol_drift_params == None:
@@ -284,8 +288,6 @@ class fast_loop(QtCore.QThread):
             pass
         
         else:
-            if self.verbose:
-                print(f"fastloop: trying to apply volume trend eqn, slope = {self.slowdata.vol_drift_params[0]}, int = {self.slowdata.vol_drift_params[1]}")
             self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)   
             if self.verbose:
                 print("fastloop: detrended volume")
