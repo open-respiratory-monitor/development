@@ -53,46 +53,29 @@ from utils import utils
 # Define the fast and slow data objects that will be passed to the GUI thread
 """
 class fast_data(object):
-    def __init__(self):
+    def __init__(self,n_samples = 0):
 
         # pressures
-        self.p1 = np.array([])
-        self.p2 = np.array([])
-        self.dp = np.array([])
+        self.p1 = np.zeros(n_samples)
+        self.p2 = np.zeros(n_samples)
+        self.dp = np.zeros(n_samples)
 
         # flow
-        self.flow_raw = np.array([])
-        self.flow = np.array([])
+        self.flow_raw = np.zeros(n_samples)
+        self.flow = np.zeros(n_samples)
 
         # volume
-        self.vol_raw = np.array([])
-        self.vol_trend = np.array([])
-        self.vol_detrend = np.array([])
-        self.v_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
-        self.vol = np.array([])
-        
-        ## THINGS THAT HOLD ARRAYS ##
-        #indices of volume min and max
-        self.index_of_min = np.array([])
-        self.index_of_max = np.array([])
+        self.vol_raw = np.zeros(n_samples)
+        self.vol_trend = np.zeros(n_samples)
+        self.vol_detrend = np.zeros(n_samples)
+        self.v_drift = np.zeros(n_samples) # the drift volume which is the spline line through the detrended volume
+        self.vol = np.zeros(n_samples)
 
-        # times of the volume min and max
-        self.vmin_times = np.array([])
-        self.vmax_times = np.array([])
-
-        # volume values at the min and max
-        self.vmin_detrend = np.array([]) # used for fitting the spline
-        self.vmin = np.array([]) # min after applying the spline. should all be zero! just a diagnostic
-        self.vmax  = np.array([]) # peaks after applying the spline. this is used for calculating breath params.
-
-        # calibrations
-        self.vol_corr_spline = None
-        self.vol_drift_params = None
-        
         # time
+        initialize_time = datetime.utcnow().timestamp()
         self.t_obj = np.array([]) # datetime object
-        self.dt = np.array([])   # dt since first sample in vector
-        self.t = np.array([])   # ctime in seconds
+        self.dt = initialize_time+np.zeros(n_samples)    # dt since first sample in vector
+        self.t = np.zeros(n_samples)   # ctime in seconds
 
         # pi GPIO state
         self.lowbatt = False
@@ -249,7 +232,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        self.fastdata.flow = self.add_new_point(self.fastdata.flow_raw, self.sensor.flow, self.num_samples_to_hold)
+        self.fastdata.flow_raw = self.add_new_point(self.fastdata.flow_raw, self.sensor.flow, self.num_samples_to_hold)
 
         # filter the flowdata
         self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
@@ -257,52 +240,81 @@ class fast_loop(QtCore.QThread):
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
-        self.fastdata.vol_raw = signal.detrend(np.cumsum(self.fastdata.flow)/(self.fs*60.0))
-        
-        # apply the volume spline correction
-        self.find_vol_peaks()
-        self.calculate_vol_drift_spline()
-        self.apply_vol_corr()
-        
+        vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
+        #vol_raw_last = np.trapz(self.fastdata.flow/(self.fs*60.0))
+        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+        #self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
+
+        """
+        #if self.verbose:
+            # debugging: print the sensor dP
+            #print (f"fastloop: dP = {self.sensor.dp}")
+            #print(f"fastloop: dP array = {self.fastdata.flow}")
+
+        # try to correct the volume. this uses the slowdata
+        #self.detrend_vol()
+        try:
+            # detrend the volume signal using the slowdata linear fit
+            self.detrend_vol()
+
+        except Exception as e:
+            print(e)
+            print("fastloop: could not detrend volume! using raw volume instead...")
+            self.fastdata.vol_detrend = 1.0*self.fastdata.vol_raw
+            self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
+
+        try:
+            # correct the detrended volume signal using the slowdata spline fit
+            self.apply_vol_corr()
+
+        except:
+            print("fastloop: could not apply vol spline correction. using raw volume isntead...")
+            self.fastdata.vol = 1.0*self.fastdata.vol_raw
+            self.fastdata.v_drift = 0.0*self.fastdata.vol_raw
+
+        """
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
-    
-    def find_vol_peaks(self):
-        """
-        ## find the min and max of the volume signal using peak finder ##
-        # times of the volume min and max
-        self.slowdata.vmin_times = np.array([])
-        self.slowdata.vmax_times = np.array([])
+    """
+    def update_cal(self,data):
 
-        #TODO delete this
-        # Old code from monitor_v7.py
-        negative_mean_subtracted_volume = [-1*(v-np.mean(self.vol)) for v in self.vol]
-        i_valleys = breath_detect_coarse(negative_mean_subtracted_volume,fs = self.fs,plotflag = False)
-        self.i_valleys = i_valleys
+        #This is a slot which receives slowloop data from the main loop every time the slowloop runs
 
-        """
-        # step 1: find index of min and max
-        self.fastdata.index_of_min = utils.breath_detect_coarse(-1*self.fastdata.vol_raw, fs = self.fs)
+        #This updates the volume calibration spline. It's triggered whenever
+        #the slow loop executes. It does the following:
+        #    1. update the spline curve
+        #    2. update the min and max times over which the calibration applies
+
+
         if self.verbose:
-            print(f"fastdata: found {len(self.slowdata.index_of_min)} peaks!")
-        # step 2:
-        self.fastdata.vmin_times = self.fastdata.t[self.fastdata.index_of_min]
-        self.slowdata.vmin = self.fastdata.vol[self.fastdata.index_of_min]
+            print("fastloop: received updated slowloop data")
 
-        
-        
-    def calculate_vol_drift_spline(self):
-        # correct the volume signal by ensuring that the lung volume is zero after every breath
+        self.slowdata = data
 
-        # fit a spline to the detrended volume minima
-        self.fastdata.vol_corr_spline = interpolate.interp1d(self.fastdata.vmin_times,self.fastdata.vmin,kind = 'linear',fill_value = 'extrapolate')
+        if self.verbose:
+                print(f"fastloop: volume trend parameters = {self.slowdata.vol_drift_params}")
+                print(f"fastloop: volume spline parameters = {self.slowdata.vol_corr_spline}")
+
+    def detrend_vol(self):
+        # apply the slowloop trend line to the volume signal
+        if self.slowdata.vol_drift_params is None:
+            if self.verbose:
+                print("fastloop: no trendline parameters to detrend volume data")
+            self.fastdata.vol_detrend = 1.0* self.fastdata.vol_raw
+            self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
+
+            pass
+
+        else:
+            self.fastdata.vol_trend = np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+            self.fastdata.vol_detrend = self.fastdata.vol_raw - self.fastdata.vol_trend
+            if self.verbose:
+                print("fastloop: detrended volume")
 
     def apply_vol_corr(self):
         # this uses the current volume minima spline calculation to correct the volume by pinning all the minima to zero
 
-        
-        
-        if self.fastdata.vol_corr_spline is None:
+        if self.slowdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
             self.fastdata.vol = 1.0* self.fastdata.vol_raw
@@ -311,14 +323,14 @@ class fast_loop(QtCore.QThread):
 
         else:
             # calculate the drift volume using the spline. because we made the spline interpolate it will work outside the correction
-            self.fastdata.v_drift = self.fastdata.vol_corr_spline(self.fastdata.t)
+            self.fastdata.v_drift = self.slowdata.vol_corr_spline(self.fastdata.t)
 
             # calculate the corrected volume
             self.fastdata.vol = self.fastdata.vol_detrend - self.fastdata.v_drift
 
             if self.verbose:
                 print("slowloop: applied spline volume correction")
-    
+    """
     def run(self):
         if self.verbose:
             print("fast loop: starting fast Loop")
