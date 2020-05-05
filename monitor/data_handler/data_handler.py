@@ -413,6 +413,7 @@ class slow_loop(QtCore.QThread):
         
         """
         fastdata_samplerate = 1 / (self.fastdata.dt[-1])
+        print(f"slowloop: fastdata_samplerate = {fastdata_samplerate}")
         
         # step 1: calculate the linear drift and spline fits to minimum
         self.slowdata.vol_drift_params = np.polyfit(self.fastdata.t,self.fastdata.vol_raw,1)
