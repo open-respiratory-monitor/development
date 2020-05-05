@@ -251,7 +251,7 @@ class fast_loop(QtCore.QThread):
         except Exception as e:
             print(e)
             print("fastloop: could not detrend volume! using raw volume instead...")
-            self.fastdata.vol_detrend = self.fastdata.vol_raw
+            self.fastdata.vol_detrend = 1.0*self.fastdata.vol_raw
             self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
 
         try:
@@ -260,7 +260,7 @@ class fast_loop(QtCore.QThread):
 
         except:
             print("fastloop: could not apply vol spline correction. using raw volume isntead...")
-            self.fastdata.vol = self.fastdata.vol_raw
+            self.fastdata.vol = 1.0*self.fastdata.vol_raw
             self.fastdata.v_drift = 0.0*self.fastdata.vol_raw
 
 
@@ -291,7 +291,7 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_drift_params is None:
             if self.verbose:
                 print("fastloop: no trendline parameters to detrend volume data")
-            self.fastdata.vol_detrend = self.fastdata.vol_raw
+            self.fastdata.vol_detrend = 1.0* self.fastdata.vol_raw
             self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
 
             pass
@@ -308,7 +308,7 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
-            self.fastdata.vol = self.fastdata.vol_raw
+            self.fastdata.vol = 1.0* self.fastdata.vol_raw
             self.fastdata.v_drift = self.fastdata.vol_raw
             pass
 
