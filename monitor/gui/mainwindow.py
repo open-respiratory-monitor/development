@@ -51,8 +51,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # set mode
         if mode.lower() == 'debug':
-            fast_update_time = 1000
-            slow_update_time = 5000
+            fast_update_time = 10
+            slow_update_time = 1000
             mode_verbose = True
         else:
             fast_update_time = 50
