@@ -260,7 +260,12 @@ class fast_loop(QtCore.QThread):
         self.fastdata.vol_raw = signal.detrend(np.cumsum(self.fastdata.flow)/(self.fs*60.0))
 
         # apply the volume spline correction
-        self.find_vol_peaks()
+        try:
+            self.find_vol_peaks()
+        except:
+            if self.verbose:
+                print("fastloop: could not run peakfinder")
+        
         if len(self.fastdata.index_of_min) >= 2:
             self.calculate_vol_drift_spline()
             self.apply_vol_corr()
