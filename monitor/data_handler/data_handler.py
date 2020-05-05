@@ -63,11 +63,14 @@ class fast_data(object):
         
         # volume
         self.vol_raw = np.array([])
+        self.vol_detrend = np.array([])
+        self.v_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
         self.vol = np.array([])
         
         # time
-        self.time = np.array([])
-        self.dt = np.array([])
+        self.t_obj = np.array([]) # datetime object
+        self.dt = np.array([])    # dt since first sample in vector
+        self.t = np.array([])     # ctime in seconds
         
         # pi GPIO state
         self.lowbatt = False
@@ -77,14 +80,23 @@ class slow_data(object):
     def __init__(self):
         
         ## THINGS THAT HOLD ARRAYS ##
+        #indices of volume min and max
+        self.index_of_min = np.array([])
+        self.index_of_max = np.array([])
+        
         # times of the volume min and max
         self.vmin_times = np.array([])
         self.vmax_times = np.array([])
         
+        # volume values at the min and max
+        self.vmin_detrend = np.array([]) # used for fitting the spline
+        self.vmin = np.array([]) # min after applying the spline. should all be zero! just a diagnostic
+        self.vmax  = np.array([]) # peaks after applying the spline. this is used for calculating breath params.
+        
         # calibrations
         self.vol_corr_spline = np.array([])
         self.vol_drift_params = np.array([])
-        
+                
         ## THINGS THAT HOLD SINGLE VALUES ##
         # times from the last breath
         self.tsi = [] # start time of inspiration
@@ -139,13 +151,16 @@ class fast_loop(QtCore.QThread):
         self.time_to_display = time_to_display #s
         
         # time between samples
-        self.dt = 1000 #ms
+        self.ts = 1000 #ms
         
-        # sample frequency - starts out as 1/self.dt but then is updated to the real fs 
-        self.fs = 1.0/self.dt
+        # real sample rate
+        self.ts_real = []
+        
+        # sample frequency - starts out as 1/self.ts but then is updated to the real fs 
+        self.fs = 1.0/self.ts
         
         # length of vectors
-        self.num_samples_to_hold = int(self.time_to_display*1000/self.dt)
+        self.num_samples_to_hold = int(self.time_to_display*1000/self.ts )
         if self.verbose:
             print(f"fastloop: num samples to hold = {self.num_samples_to_hold}")
         # this just holds a number which increments every time the loop runs
@@ -194,7 +209,17 @@ class fast_loop(QtCore.QThread):
             print("fast loop: Index =  %d" % self.index)
             
         # record the update time
-        self.time = datetime.utcnow()
+        self.update_time = datetime.utcnow()
+        self.fastdata.t_obj = self.add_new_point(self.fastdata.t_obj, self.update_time, self.num_samples_to_hold)
+        self.fastdata.t =     self.add_new_point(self.fastdata.t, self.update_time.timestamp(), self.num_samples_to_hold)
+        self.fastdata.dt = self.fastdata.t - self.fastdata.t[0]
+        
+        # if there's at least two elements in the vector, calculate the real delta between samples
+        if len(self.fastdata.dt) >= 2:
+            self.ts_real = self.fastdata.dt[-2] - self.fastdata.dt[-1]
+            self.fs = 1.0/self.ts_real
+        
+        
         
         # read the sensor pressure and flow data
         # there's probably a clenaer way to do this, but oh well...
@@ -238,24 +263,13 @@ class fast_loop(QtCore.QThread):
             
         self.slowdata = data
             
-    def correct_vol(self):
-        # this uses the current volume minima spline calculation to correct
-        # the volume by pinning all the minima to zero
-        
-        if self.verbose:
-            print("fastloop: correcting volume")
-        
-        # step 1: detrend the raw volume
-        
-        # step 2: use the spline to correct the volume
-        
     
     
     def run(self):
         if self.verbose:
             print("fast loop: starting fast Loop")
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(self.dt)
+        self.timer.setInterval(self.ts)
         self.timer.timeout.connect(self.update)
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
@@ -313,10 +327,10 @@ class slow_loop(QtCore.QThread):
         
         
         # time between samples
-        self.dt = 5000 #ms
+        self.ts = 5000 #ms
         
-        # sample frequency - starts out as 1/self.dt but then is updated to the real fs 
-        self.fs = 1.0/self.dt
+        # loop sample frequency - starts out as 1/self.ts but then is updated to the real fs 
+        self.fs = 1.0/self.ts
         
 
         
@@ -325,24 +339,118 @@ class slow_loop(QtCore.QThread):
         self.wait()
     
     def update(self):
+        """ 
+        ### This is the slow loop ####
+        
+        Here's what we want to do:
+            
+            1. Calculate the correction to the volume signal
+                # calibrations
+                self.slowdata.vol_corr_spline = np.array([])
+                self.slowdata.vol_drift_params = np.array([])
+            2. fit the mimima and maxima of the volume signal using peak finder
+            3. calculate the breath parameters of the last breath:
+        """
         self.index +=1
         if self.verbose:
             print("slowloop: %d" % self.index)
             
         # emit the request data signal to get the current fastloop data vectors
         self.request_fastdata.emit()
-            
         if self.verbose:
             print(f"slowloop: slowloop.fastdata.dp = {self.fastdata.dp}")    
-            
+        
+        # find the volume peaks
+        self.find_vol_peaks() 
+        
+        # calculate the sline through the volume minima
+        self.calculate_vol_drift_spline()
+        
+        # apply the volume correction
+        self.apply_vol_corr()
+        
+        # calculate breath parameters
+        #self.calculate_breath_params()
+        
         # tell main that there's new slow data: emit the newdata signal
         self.newdata.emit(self.slowdata)
     
+            
     
+    def apply_vol_corr(self):
+        # this uses the current volume minima spline calculation to correct
+        # the volume by pinning all the minima to zero
+        
+        if self.verbose:
+            print("fastloop: correcting volume")
+        
+        # calculate the drift volume using the spline. because we made the spline interpolate it will work outside the correction
+        self.fastdata.v_drift = self.slowdata.vol_corr_spline(self.fastdata.t)
+        
+        # calculate the corrected volume
+        self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
+        
+        
+        
+        
+    def calculate_vol_drift_spline(self):
+        
+        # fit a spline to the detrended volume minima
+        self.slowdata.vol_corr_spline = interpolate.interp1d(self.slowdata.vmin_times,self.slowdata.vmin_detrend,kind = 'linear',fill_value = 'extrapolate')
+        
+    def find_vol_peaks(self):
+        """
+        ## find the min and max of the volume signal using peak finder ##
+        # times of the volume min and max
+        self.slowdata.vmin_times = np.array([])
+        self.slowdata.vmax_times = np.array([])
+        
+        #TODO delete this
+        # Old code from monitor_v7.py
+        negative_mean_subtracted_volume = [-1*(v-np.mean(self.vol)) for v in self.vol]
+        i_valleys = breath_detect_coarse(negative_mean_subtracted_volume,fs = self.fs,plotflag = False)
+        self.i_valleys = i_valleys
+        
+        """
+        fastdata_samplerate = 1 / (self.fastdata.dt[-1])
+        
+        # step 1: calculate the linear drift and spline fits to minimum
+        self.slowdata.vol_drift_params = np.polyfit(self.fastdata.t,self.fastdata.vol_raw,1)
+
+        # step 2: detrend the raw volume
+        self.fastdata.vol_detrend = self.fastdata.vol_raw - np.polyval(self.slowdata.vol_drift_params,self.fastdata.t)
+        
+        # step 1: find index of min and max
+        self.slowdata.index_of_min = utils.breath_detect_coarse(-1*self.fastdata.vol_detrend, fs = fastdata_samplerate)
+        self.slowdata.index_of_max = utils.breath_detect_coarse(self.fastdata.vol_detrend,    fs = fastdata_samplerate)
+        
+        # step 2: 
+        self.slowdata.vmin_times = self.fastdata.t[self.slowdata.index_of_min]
+        self.slowdata.vmax_times = self.fastdata.t[self.slowdata.index_of_max]
+        self.slowdata.vmin_detrend = self.fastdata.vol_detrend[self.slowdata.index_of_min]
+        
+        
+    def calculate_breath_params(self):
+        """    
+        
+        ## THINGS THAT HOLD SINGLE VALUES ##
+        # times from the last breath
+        self.tsi = [] # start time of inspiration
+        self.tei = [] # end time of inspiration
+        self.tse = [] # start time of expiration (same as tei)
+        self.tee = [] # end time of expiration
+        
+        # respiratory parameters from last breath
+        self.pip = []
+        self.peep = []
+        self.pp = []
+        self.vt = []
+        self.mve = []
+        self.rr = []
+        self.ie = []
+        self.c = []
+        """
     
-    
-    #def fit_vol_spline(self):
-        # This         
     
     def update_fast_data(self,fastdata):
         # this is a slot connected to mainwindow.newrequest
@@ -356,7 +464,7 @@ class slow_loop(QtCore.QThread):
     def run(self):
         print("starting slowloop")
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(self.dt)
+        self.timer.setInterval(self.ts)
         self.timer.timeout.connect(self.update)
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
