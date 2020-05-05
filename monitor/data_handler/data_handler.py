@@ -244,19 +244,19 @@ class fast_loop(QtCore.QThread):
         try:
             # detrend the volume signal using the slowdata linear fit
             self.detrend_vol()
-            try:
-                # correct the detrended volume signal using the slowdata spline fit
-                self.apply_vol_corr()
-                
-            except:
-                print("fastloop: could not apply vol spline correction. using raw volume isntead...")
-                self.fastdata.vol = self.fastdata.vol_raw
-            
         except:
             print("fastloop: could not detrend volume! using raw volume instead...")
-            # send the uncorrected volume to the "corrected" volume vector
             self.fastdata.vol_detrend = self.fastdata.vol_raw
+            
+        try:
+            # correct the detrended volume signal using the slowdata spline fit
+            self.apply_vol_corr()
+            
+        except:
+            print("fastloop: could not apply vol spline correction. using raw volume isntead...")
             self.fastdata.vol = self.fastdata.vol_raw
+            
+        
             
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
@@ -285,6 +285,7 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_drift_params is None:
             if self.verbose:
                 print("fastloop: no trendline parameters to detrend volume data")
+                self.fastdata.vol_detrend = self.fastdata.vol_raw
             pass
         
         else:
@@ -298,6 +299,7 @@ class fast_loop(QtCore.QThread):
         if self.slowdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
+                self.fastdata.vol = self.fastdata.vol_raw
             pass
         
         else:
