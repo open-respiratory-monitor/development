@@ -85,8 +85,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.newdata.connect(self.update_slow_data)
 
         # if the slowloop sends new data, send it to the fastloop
-        self.slow_loop.newdata.connect(self.send_slowloop_data_to_fastloop) # tells mainloop we should send data from the main loop
-        self.request_to_update_cal.connect(self.fast_loop.update_cal)       # sends the slowdata from the mainloop to the fastloop
+        #self.slow_loop.newdata.connect(self.send_slowloop_data_to_fastloop) # tells mainloop we should send data from the main loop
+        #self.request_to_update_cal.connect(self.fast_loop.update_cal)       # sends the slowdata from the mainloop to the fastloop
 
         # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
@@ -175,6 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.verbose:
             print("main: received new data from fastloop!")
             #print(f"main: dP = {data.dp[-1]}")
+            print(f"main: raw vol = {self.fastdata.vol_raw}")
         self.fastdata = data
 
 

@@ -39,6 +39,7 @@ import sys
 from datetime import datetime
 from scipy import interpolate
 
+
 # add the wsp directory to the PATH
 main_path = os.path.dirname(os.getcwd())
 sys.path.insert(1, main_path)
@@ -234,9 +235,11 @@ class fast_loop(QtCore.QThread):
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
         #vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
-        #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
-        self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
-    """
+        vol_raw_last = np.trapz(self.fastdata.flow/(self.fs*60.0))
+        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+        #self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
+
+        """
         #if self.verbose:
             # debugging: print the sensor dP
             #print (f"fastloop: dP = {self.sensor.dp}")
@@ -263,19 +266,19 @@ class fast_loop(QtCore.QThread):
             self.fastdata.vol = 1.0*self.fastdata.vol_raw
             self.fastdata.v_drift = 0.0*self.fastdata.vol_raw
 
-
+        """
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
-
+    """
     def update_cal(self,data):
-        
+
         #This is a slot which receives slowloop data from the main loop every time the slowloop runs
 
         #This updates the volume calibration spline. It's triggered whenever
         #the slow loop executes. It does the following:
         #    1. update the spline curve
         #    2. update the min and max times over which the calibration applies
-        
+
 
         if self.verbose:
             print("fastloop: received updated slowloop data")
