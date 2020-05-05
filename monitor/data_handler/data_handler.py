@@ -38,7 +38,7 @@ import os
 import sys
 from datetime import datetime
 from scipy import interpolate
-from scipy import integrate
+from scipy import signal
 
 
 # add the wsp directory to the PATH
@@ -72,8 +72,9 @@ class fast_data(object):
         self.vol = np.zeros(n_samples)
 
         # time
+        initialize_time = datetime.utcnow().timestamp()
         self.t_obj = np.array([]) # datetime object
-        self.dt = np.zeros(n_samples)    # dt since first sample in vector
+        self.dt = initialize_time+np.zeros(n_samples)    # dt since first sample in vector
         self.t = np.zeros(n_samples)   # ctime in seconds
 
         # pi GPIO state
@@ -139,7 +140,7 @@ class fast_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
 
-    def __init__(self, main_path, update_time = 1000, time_to_display = 20.0,verbose = False):
+    def __init__(self, main_path, update_time = 1000, time_to_display = 10.0,verbose = False):
 
         QtCore.QThread.__init__(self)
 
@@ -234,15 +235,15 @@ class fast_loop(QtCore.QThread):
         self.fastdata.flow_raw = self.add_new_point(self.fastdata.flow_raw, self.sensor.flow, self.num_samples_to_hold)
 
         # filter the flowdata
-        self.fastdata.flow = utils.zerophase_lowpass(self.fastdata.flow_raw,3,fs = self.fs,force_length = True)
+        self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
 
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
-        #vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
+        vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
         #vol_raw_last = np.trapz(self.fastdata.flow/(self.fs*60.0))
-        #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
-        self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
+        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
+        #self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
 
         """
         #if self.verbose:
