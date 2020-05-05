@@ -243,11 +243,13 @@ class fast_loop(QtCore.QThread):
             #print(f"fastloop: dP array = {self.fastdata.flow}")
 
         # try to correct the volume. this uses the slowdata
+        
         try:
             # detrend the volume signal using the slowdata linear fit
             self.detrend_vol()
 
-        except:
+        except Exception as e:
+            print(e)
             print("fastloop: could not detrend volume! using raw volume instead...")
             self.fastdata.vol_detrend = self.fastdata.vol_raw
             self.fastdata.vol_trend = 0.0*self.fastdata.vol_raw
