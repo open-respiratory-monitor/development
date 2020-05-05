@@ -29,10 +29,13 @@ def main():
     """
     Main function.
     """
-
+    # Load configuration
+    config = []
+    
+    
     app = QtWidgets.QApplication(sys.argv)
     print(f"toplevel: main path = {main_path}")
-    window = mainwindow.MainWindow(main_path = main_path,verbose = True)
+    window = mainwindow.MainWindow(config = config, main_path = main_path, verbose = True)
     
     window.show()
     app.exec_()
