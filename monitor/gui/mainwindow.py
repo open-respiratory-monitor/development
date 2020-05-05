@@ -51,12 +51,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # set mode
         if mode.lower() == 'debug':
-            fast_update_time = 50
-            slow_update_time = 1000
+            fast_update_time = 1000
+            slow_update_time = 5000
             mode_verbose = True
         else:
-            fast_update_time = 10
-            slow_update_time = 1000
+            fast_update_time = 50
+            slow_update_time = 2000
             mode_verbose = False
 
         # configuration
@@ -140,7 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow, pen = bluepen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol,      pen = pen)
-        
+        self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = 10 #update time of timer in ms
@@ -153,11 +153,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     ### gui-related functions
     def update_plots(self):
+
         # update the plots with the new data
 
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
+        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_detrend) #update the data
+        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.v_drift)
         """
         try:
             fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
@@ -167,6 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except:
             pass
         """
+
     ### slots to handle data transfer between threads ###
     def update_fast_data(self,data):
         if self.verbose:
@@ -189,4 +192,3 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.verbose:
             print(f"main: sending updated slowloop data to fastloop")
         self.request_to_update_cal.emit(self.slowdata)
-

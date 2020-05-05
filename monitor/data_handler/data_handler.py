@@ -228,7 +228,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
         self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
-       
+
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
@@ -245,7 +245,7 @@ class fast_loop(QtCore.QThread):
         try:
             # detrend the volume signal using the slowdata linear fit
             self.detrend_vol()
-            
+
         except:
             print("fastloop: could not detrend volume! using raw volume instead...")
             self.fastdata.vol_detrend = self.fastdata.vol_raw
