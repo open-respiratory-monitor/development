@@ -137,13 +137,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol,      pen = pen)
         
-        
+        # update the graphs at regular intervals (so it runs in a separate thread!!)
+        # Stuff with the timer
+        self.t_update = 10 #update time of timer in ms
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(self.t_update)
+        self.timer.timeout.connect(self.update_plots)
+        self.timer.start()
         
         
         
     ### gui-related functions
     def update_plots(self):
-        
+        # update the plots with the new data
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
         self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol) #update the data
@@ -156,9 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("main: received new data from fastloop!")
             #print(f"main: dP = {data.dp[-1]}")
         self.fastdata = data
-        
-        self.update_plots()
-        
+                
         
     def update_slow_data(self,data):
         if self.verbose:
