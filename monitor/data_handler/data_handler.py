@@ -206,7 +206,7 @@ class fast_loop(QtCore.QThread):
         
         if self.verbose:
             # debugging: print an update of what we're doing
-            print("fast loop: Index =  %d" % self.index)
+            print("\nslowloop: Index =  %d" % self.index)
             
         # record the update time
         self.update_time = datetime.utcnow()
@@ -310,7 +310,7 @@ class slow_loop(QtCore.QThread):
         # get the main path
         self.main_path = main_path
         if self.verbose:
-            print(f"fastloop: main path = {self.main_path}")
+            print(f"slowloop: main path = {self.main_path}")
         
         # run in verbose mode?
         self.verbose = verbose
@@ -353,7 +353,7 @@ class slow_loop(QtCore.QThread):
         """
         self.index +=1
         if self.verbose:
-            print("slowloop: %d" % self.index)
+            print("\nslowloop: %d" % self.index)
             
         # emit the request data signal to get the current fastloop data vectors
         self.request_fastdata.emit()
