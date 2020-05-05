@@ -290,6 +290,8 @@ class fast_loop(QtCore.QThread):
             if self.verbose:
                 print("fastloop: no trendline parameters to detrend volume data")
                 self.fastdata.vol_detrend = self.fastdata.vol_raw
+                self.fastloop.vol_trend = 0.0*self.fastdata.vol
+
             pass
 
         else:
