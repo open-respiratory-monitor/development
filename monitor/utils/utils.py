@@ -54,11 +54,17 @@ def breath_detect_coarse(flow,fs,plotflag = False):
     return peak_index
 
 
-def zerophase_lowpass(x,lf,fs):
+def zerophase_lowpass(x,lf,fs,force_length = False):
     # filter flow using S-G filter
     
     # filter flow
     N = 2 # the higher the sharper the peak is
+    
+    if force_length:
+        l_lfilter = lf
+    else:
+    
+    
     # length = 1s (cut off frequency = 0.965 Hz)
     # Refer. Schafer, 2011, What is S-G filter.
     # fc_n = (N+1)/(3.2M - 4.6) (normalized unit)
@@ -70,12 +76,12 @@ def zerophase_lowpass(x,lf,fs):
     # l_lfilter = round(fs*lf); % the longer, the smoother
     # l_lfilter = round(fs*lf); % the longer, the smoother
     
-    l_lfilter = np.int(np.round(((N+1)*fs/(2*lf)+4.6)/3.2))
-    #print('l_lfilter = ',l_lfilter)
-    if np.mod(l_lfilter,2) == 0:
-        l_lfilter = l_lfilter + 1
-        #print('made odd: l_lfilter = ',l_lfilter)
-    
+        l_lfilter = np.int(np.round(((N+1)*fs/(2*lf)+4.6)/3.2))
+        #print('l_lfilter = ',l_lfilter)
+        if np.mod(l_lfilter,2) == 0:
+            l_lfilter = l_lfilter + 1
+            #print('made odd: l_lfilter = ',l_lfilter)
+        
     # filter flow signal
     x_filt = signal.savgol_filter(x,polyorder = N,window_length = l_lfilter)
     return x_filt
