@@ -236,7 +236,7 @@ class fast_loop(QtCore.QThread):
         #vol_raw_last = np.sum(self.fastdata.flow)/(self.fs*60.0) # the sum up to now. This way we don't have to calculate the cumsum of the full array
         #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,vol_raw_last,self.num_samples_to_hold)
         self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
-
+    """
         #if self.verbose:
             # debugging: print the sensor dP
             #print (f"fastloop: dP = {self.sensor.dp}")
@@ -268,14 +268,14 @@ class fast_loop(QtCore.QThread):
         self.newdata.emit(self.fastdata)
 
     def update_cal(self,data):
-        """
-        This is a slot which receives slowloop data from the main loop every time the slowloop runs
+        
+        #This is a slot which receives slowloop data from the main loop every time the slowloop runs
 
-        This updates the volume calibration spline. It's triggered whenever
-        the slow loop executes. It does the following:
-            1. update the spline curve
-            2. update the min and max times over which the calibration applies
-        """
+        #This updates the volume calibration spline. It's triggered whenever
+        #the slow loop executes. It does the following:
+        #    1. update the spline curve
+        #    2. update the min and max times over which the calibration applies
+        
 
         if self.verbose:
             print("fastloop: received updated slowloop data")
@@ -321,7 +321,7 @@ class fast_loop(QtCore.QThread):
 
             if self.verbose:
                 print("slowloop: applied spline volume correction")
-
+    """
     def run(self):
         if self.verbose:
             print("fast loop: starting fast Loop")
