@@ -244,15 +244,12 @@ class fast_loop(QtCore.QThread):
 
 
         # read the sensor pressure and flow data
-        # there's probably a clenaer way to do this, but oh well...
+        # there's probably a cleaner way to do this, but oh well...
         self.sensor.read()
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
         self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
-
-        # filter the flowdata
-        #self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
 
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
@@ -262,15 +259,15 @@ class fast_loop(QtCore.QThread):
         # apply the volume spline correction
         try:
             self.find_vol_peaks()
-        except:
-            if self.verbose:
-                print("fastloop: could not run peakfinder")
+        except Exception as e:
+            print("fastloop: could not run peakfinder")
+            print(e)
         
         if len(self.fastdata.index_of_min) >= 2:
             self.calculate_vol_drift_spline()
             self.apply_vol_corr()
         else:
-            self.vol = self.vol_raw
+            self.vol = np.copy(self.vol_raw)
             self.v_drift = 0.0*self.vol_raw
             
         # tell the newdata signal to emit every time we update the data
@@ -314,8 +311,8 @@ class fast_loop(QtCore.QThread):
         if self.fastdata.vol_corr_spline is None:
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
-            self.fastdata.vol = 1.0* self.fastdata.vol_raw
-            self.fastdata.v_drift = self.fastdata.vol_raw
+            self.fastdata.vol = 1.0 * self.fastdata.vol_raw
+            self.fastdata.v_drift = 1.0 * self.fastdata.vol_raw
             pass
 
         else:
