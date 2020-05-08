@@ -175,15 +175,15 @@ class fast_loop(QtCore.QThread):
         self.slowdata = slow_data()
 
         # Set up the sensor
-        self.sensor = sensor.sensor(main_path = self.main_path,dp_thresh = 0.0,verbose = self.verbose)
-        
+        self.sensor = sensor.sensor(main_path = self.main_path,verbose = self.verbose)
+
         # set up file to store sensor data
         print('creating file to store cal data')
         filename = str(int(datetime.utcnow().timestamp()))
         self.sensor_datafile = open(filename + "_sensor_raw.txt","w")
-        self.sensor_datafile.write('dp \t flow')
+        self.sensor_datafile.write('time \t p1 \t p2 \t dp')
 
-        
+
         """
         # Correction equations:
         # Line to fit the flow drift - will hold polynomial fit parameters
@@ -237,19 +237,19 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        
+
         self.log_raw_sensor_data()
-        
+
         #self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
 
         self.fastdata.dp = signal.detrend(self.fastdata.dp,type = 'constant')
         self.fastdata.dp[np.abs(self.fastdata.dp)<0.0] = 0.0
 
         self.fastdata.flow = self.sensor.dp2flow(self.fastdata.dp)
-        
-        
-        
-        
+
+
+
+
         """
         fnyq = 0.5*self.fs
         lowcut =  1.0/(self.time_to_display/5)/fnyq
@@ -300,12 +300,12 @@ class fast_loop(QtCore.QThread):
 
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
-    
+
     def log_raw_sensor_data(self):
-        
-        self.sensor_datafile.write('%f \t %f \t %f\n' %(self.t[-1],self.dp[-1],self.volt[-1]))
-        
-    
+
+        self.sensor_datafile.write('%f \t %f \t %f \t %f\n' %(self.fastdata.t[-1],self.fastdata.p1[-1],self.fastdata.p2[-1],self.fastdata.dp[-1]))
+
+
     def update_cal(self,data):
         """
         This is a slot which receives slowloop data from the main loop every time the slowloop runs
