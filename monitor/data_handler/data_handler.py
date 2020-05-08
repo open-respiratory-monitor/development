@@ -334,22 +334,7 @@ class fast_loop(QtCore.QThread):
         self.timer.start()
         self.exec() # YOU NEED THIS TO START UP THE THREAD!
 
-        # NOTE: only QThreads have this exec() function, NOT QRunnables
-        # If you don't do the exec(), then it won't start up the event loop
-        # QThreads have event loops, not QRunnables
 
-        """
-        # NOTE: only QThreads have this exec() function, NOT QRunnables
-        #       If you don't do the exec(), then it won't start up the event
-        #       loop QThreads have event loops, not QRunnables
-
-        # Source: https://doc.qt.io/qtforpython/overviews/timers.html
-        Quote:
-          In multithreaded applications, you can use the timer mechanism in any
-          thread that has an event loop. To start an event loop from a non-GUI
-          thread, use exec()
-
-        """
 
 
 class slow_loop(QtCore.QThread):
