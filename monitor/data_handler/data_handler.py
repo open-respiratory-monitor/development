@@ -244,19 +244,22 @@ class fast_loop(QtCore.QThread):
 
 
         # read the sensor pressure and flow data
-        # there's probably a clenaer way to do this, but oh well...
+        # there's probably a cleaner way to do this, but oh well...
         self.sensor.read()
         self.fastdata.p1   = self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
         self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
 
+<<<<<<< HEAD
         # filter the flowdata
         #self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
 
         #detrend the flow
         self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
 
+=======
+>>>>>>> 9b6995dac252b80d4e216ebcd1751748d1126045
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
@@ -271,17 +274,30 @@ class fast_loop(QtCore.QThread):
 
         try:
             self.find_vol_peaks()
+<<<<<<< HEAD
         except:
             if self.verbose:
                 print("fastloop: could not run peakfinder")
 
+=======
+        except Exception as e:
+            print("fastloop: could not run peakfinder")
+            print(e)
+        
+>>>>>>> 9b6995dac252b80d4e216ebcd1751748d1126045
         if len(self.fastdata.index_of_min) >= 2:
             self.calculate_vol_drift_spline()
             self.apply_vol_corr()
         else:
+<<<<<<< HEAD
             self.fastdata.vol = self.fastdata.vol_raw
             self.fastdata.v_drift = 0.0*self.fastdata.vol_raw
 
+=======
+            self.vol = np.copy(self.vol_raw)
+            self.v_drift = 0.0*self.vol_raw
+            
+>>>>>>> 9b6995dac252b80d4e216ebcd1751748d1126045
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
 
@@ -324,8 +340,13 @@ class fast_loop(QtCore.QThread):
         if (self.fastdata.vol_corr_spline is None) or (len(self.fastdata.index_of_min) == 0):
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
+<<<<<<< HEAD
             self.fastdata.vol = np.copy(self.fastdata.vol_raw)
             self.fastdata.v_drift = 0.0 * (self.fastdata.vol_raw)
+=======
+            self.fastdata.vol = 1.0 * self.fastdata.vol_raw
+            self.fastdata.v_drift = 1.0 * self.fastdata.vol_raw
+>>>>>>> 9b6995dac252b80d4e216ebcd1751748d1126045
             pass
 
         else:
