@@ -51,11 +51,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # set mode
         if mode.lower() == 'debug':
-            fast_update_time = 1000
-            slow_update_time = 5000
+            fast_update_time = 100
+            slow_update_time = 1000
             mode_verbose = True
         else:
-            fast_update_time = 10
+            fast_update_time = 100
             slow_update_time = 1000
             mode_verbose = False
 
@@ -123,13 +123,13 @@ class MainWindow(QtWidgets.QMainWindow):
         labelStyle = {'color': '#FFF', 'font-size': '12pt'}
         self.graph1.setLabel('left','P','cmH20',**labelStyle)
         self.graph2.setLabel('left','Flow','L/m',**labelStyle)
-        self.graph3.setLabel('left','V','L',**labelStyle)
+        self.graph3.setLabel('left','V','mL',**labelStyle)
         self.graph3.setLabel('bottom', 'Time', 's', **labelStyle)
 
         # change the plot range
-        #self.graph0.setYRange(-30,30,padding = 0.1)
-        #self.graph1.setYRange(-2,2,padding = 0.1)
-        self.graph3.setYRange(-1,1,padding = 0.1)
+        #self.graph1.setYRange(-50,50,padding = 0.1)
+        #self.graph2.setYRange(-100,100,padding = 0.1)
+        #self.graph3.setYRange(0,1500,padding = 0.1)
 
         # make a QPen object to hold the marker properties
         pen = pg.mkPen(color = 'y',width = 1)
@@ -137,10 +137,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # define the curves to plot
         self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = pen)
+        self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
         #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow_raw, pen = bluepen)
-        self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol_raw,      pen = pen)
-        #self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_detrend, pen = bluepen)
+        self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = pen)
+        self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_raw*1000, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = 10 #update time of timer in ms
@@ -157,9 +158,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # update the plots with the new data
 
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
+        self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw) #update the data
-        s#elf.data_line2b.setData(self.fastdata.dt,  self.fastdata.flow)
+        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
+        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_raw*1000)
         """
         try:
             fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
@@ -175,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.verbose:
             print("main: received new data from fastloop!")
             #print(f"main: dP = {data.dp[-1]}")
-            print(f"main: raw vol = {self.fastdata.vol_raw}")
+            #print(f"main: raw vol = {self.fastdata.vol_raw}")
         self.fastdata = data
 
 
