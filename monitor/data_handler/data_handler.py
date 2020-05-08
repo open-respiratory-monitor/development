@@ -157,7 +157,7 @@ class fast_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
 
-    def __init__(self, main_path, update_time = 1000, time_to_display = 10.0,verbose = False):
+    def __init__(self, main_path, update_time = 1000, time_to_display = 20.0,verbose = False):
 
         QtCore.QThread.__init__(self)
 
@@ -236,9 +236,9 @@ class fast_loop(QtCore.QThread):
         self.fastdata.t =     self.add_new_point(self.fastdata.t, self.update_time.timestamp(), self.num_samples_to_hold)
         self.fastdata.dt = self.fastdata.t - self.fastdata.t[0]
 
-        # if there's at least two elements in the vector, calculate the real delta between samples
+        # if there's at least two elements in the vector, calculate the real average delta between samples
         if len(self.fastdata.dt) >= 2:
-            self.ts_real = self.fastdata.dt[-2] - self.fastdata.dt[-1]
+            self.ts_real = np.abs(np.mean(self.fastdata.dt[1:] - self.fastdata.dt[:-1]))
             self.fs = 1.0/self.ts_real
 
 
@@ -254,25 +254,34 @@ class fast_loop(QtCore.QThread):
         # filter the flowdata
         #self.fastdata.flow = signal.savgol_filter(self.fastdata.flow_raw,75,2)
 
+        #detrend the flow
+        self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
+
         # calculate the raw volume
         # volume is in liters per minute! so need to convert fs from (1/s) to (1/m)
             # fs (1/min) = fs (1/s) * 60 (s/min)
-        self.fastdata.vol_raw = signal.detrend(np.cumsum(self.fastdata.flow)/(self.fs*60.0))
+        self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fs*60.0)
 
         # apply the volume spline correction
+        if self.verbose:
+            if len(self.fastdata.t) >= self.num_samples_to_hold:
+                print("fastloop: vectors are full")
+                print(f"fastloop: fs = {self.fs}")
+
+
         try:
             self.find_vol_peaks()
         except:
             if self.verbose:
                 print("fastloop: could not run peakfinder")
-        
+
         if len(self.fastdata.index_of_min) >= 2:
             self.calculate_vol_drift_spline()
             self.apply_vol_corr()
         else:
-            self.vol = self.vol_raw
-            self.v_drift = 0.0*self.vol_raw
-            
+            self.fastdata.vol = self.fastdata.vol_raw
+            self.fastdata.v_drift = 0.0*self.fastdata.vol_raw
+
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
 
@@ -292,12 +301,13 @@ class fast_loop(QtCore.QThread):
         """
         # step 1: find index of min and max
         self.fastdata.index_of_min = utils.breath_detect_coarse(-1*self.fastdata.vol_raw, fs = self.fs)
+
+
         if self.verbose:
-            print(f"fastdata: found {len(self.slowdata.index_of_min)} peaks!")
+            print(f"fastdata: found {len(self.fastdata.index_of_min)} peaks!")
         # step 2:
         self.fastdata.vmin_times = self.fastdata.t[self.fastdata.index_of_min]
-        self.fastdata.vmin = self.fastdata.vol[self.fastdata.index_of_min]
-
+        self.fastdata.vmin = self.fastdata.vol_raw[self.fastdata.index_of_min]
 
 
     def calculate_vol_drift_spline(self):
@@ -311,11 +321,11 @@ class fast_loop(QtCore.QThread):
 
 
 
-        if self.fastdata.vol_corr_spline is None:
+        if (self.fastdata.vol_corr_spline is None) or (len(self.fastdata.index_of_min) == 0):
             if self.verbose:
                 print("fastloop: no spline fit to apply to volume data")
-            self.fastdata.vol = 1.0* self.fastdata.vol_raw
-            self.fastdata.v_drift = self.fastdata.vol_raw
+            self.fastdata.vol = np.copy(self.fastdata.vol_raw)
+            self.fastdata.v_drift = 0.0 * (self.fastdata.vol_raw)
             pass
 
         else:
@@ -323,10 +333,12 @@ class fast_loop(QtCore.QThread):
             self.fastdata.v_drift = self.fastdata.vol_corr_spline(self.fastdata.t)
 
             # calculate the corrected volume
-            self.fastdata.vol = self.fastdata.vol_detrend - self.fastdata.v_drift
+            self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.v_drift
+
 
             if self.verbose:
                 print("fastloop: applied spline volume correction")
+                print(f"fastloop: max V = {np.max(self.fastdata.vol)}")
 
     def run(self):
         if self.verbose:
@@ -354,7 +366,7 @@ class fast_loop(QtCore.QThread):
 
         """
 
-
+###################################################################################
 class slow_loop(QtCore.QThread):
 
     # define a new signal that will be used to send updated data back to the main thread
@@ -534,7 +546,7 @@ class slow_loop(QtCore.QThread):
         # this takes the fastdata from the main window and updates the internal value of fastdata
         if self.verbose:
             print(f"slowloop: received new fastdata from main")
-        self.fastdata = fastdata
+        #self.fastdata = fastdata
 
 
 
