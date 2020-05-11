@@ -137,10 +137,16 @@ class fast_loop(QtCore.QThread):
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
 
-    def __init__(self, main_path, update_time = 1000, time_to_display = 20.0,verbose = False):
+    def __init__(self, main_path, update_time = 1000, time_to_display = 20.0,simulation = False,logdata = False,verbose = False):
 
         QtCore.QThread.__init__(self)
-
+        
+        # save a continuous log of the pressure data?
+        self.logdata = logdata
+        
+        # run in simulation mode?
+        self.simulation = simulation
+        
         # run in verbose mode?
         self.verbose = verbose
 
@@ -175,13 +181,17 @@ class fast_loop(QtCore.QThread):
         self.slowdata = slow_data()
 
         # Set up the sensor
-        self.sensor = sensor.sensor(main_path = self.main_path,verbose = self.verbose)
+        if self.simulation:
+            self.sensor = sensor.fakesensor(main_path = self.main_path, verbose = self.verbose)
+        else:
+            self.sensor = sensor.sensor(main_path = self.main_path,verbose = self.verbose)
 
         # set up file to store sensor data
-        print('creating file to store cal data')
-        filename = str(int(datetime.utcnow().timestamp()))
-        self.sensor_datafile = open(filename + "_sensor_raw.txt","w")
-        self.sensor_datafile.write('time \t p1 \t p2 \t dp')
+        if logdata:
+            print('creating file to store cal data')
+            filename = str(int(datetime.utcnow().timestamp()))
+            self.sensor_datafile = open(filename + "_sensor_raw.txt","w")
+            self.sensor_datafile.write('time \t p1 \t p2 \t dp')
 
 
         """
@@ -238,7 +248,9 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p2   = self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   = self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
 
-        self.log_raw_sensor_data()
+        # log the data if we're in logdata mode
+        if self.logdata:
+            self.log_raw_sensor_data()
 
         #self.fastdata.flow = self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
 

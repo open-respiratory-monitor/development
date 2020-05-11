@@ -15,9 +15,10 @@ from scipy import signal
 from scipy import interpolate
 from scipy import misc
 
+
 flowcal = np.loadtxt('Flow_Calibration.txt',delimiter = '\t',skiprows = 1)
 
-def breath_detect_coarse(flow,fs,plotflag = False):
+def breath_detect_coarse(flow,fs,minpeak = 0.05,plotflag = False):
     """
     %% This function detects peaks of flow signal
     
@@ -45,7 +46,7 @@ def breath_detect_coarse(flow,fs,plotflag = False):
     minpeakwidth = fs*0.3
     peakdistance = fs*1.5
     #print('peakdistance = ',peakdistance)
-    minPeak = 0.2 # flow threshold = 0.05 (L/s)
+    minPeak = minpeak # flow threshold = 0.05 (L/s)
     minpeakprominence = 0.05
     
     peak_index, _  = signal.find_peaks(flow, 
@@ -111,7 +112,7 @@ def calculate_breath_params(i_min,i,time, vol):
     
 
 time,p1,p2,dp_raw = np.loadtxt('1588972688_sensor_raw.txt',delimiter = '\t',skiprows = 1,unpack = True)
-
+#time,p1,p2,dp_raw = np.loadtxt('Simulated_Data.txt',delimiter = '\t',skiprows = 1,unpack = True)
 i_raw = np.arange(len(time))
 
 
@@ -128,7 +129,7 @@ def run(i0,irange):
     
     #plt.ion()
     i = i_raw[i0:imax]
-
+    p = p1[i0:imax]
     dp = dp_raw[i0:imax]
     dp_zero = np.mean(dp[np.abs(dp)<0.1])
     dp = dp-dp_zero
@@ -141,7 +142,7 @@ def run(i0,irange):
     vol_raw = np.cumsum(flow)/(fs*60.0)
     v_model = []
     try:
-        i_min = breath_detect_coarse(-1.0*vol_raw,fs)
+        i_min = breath_detect_coarse(-1.0*vol_raw,fs,minpeak = 0.05)
         
         #print(f'found minima at i = {i[i_min]}')
         if len(i_min) >= 2:
@@ -160,7 +161,7 @@ def run(i0,irange):
     vol = vol_raw - v_drift
     
 
-    
+    i_min = breath_detect_coarse(1.0*dp,fs,minpeak = 0.5)
     iis,iie,iee,tis,tie,tee,vt = calculate_breath_params(i_min,i,t, vol)
     
     
@@ -168,7 +169,8 @@ def run(i0,irange):
     ax2.cla()
     ax3.cla()
     ax4.cla()
-
+    #ax5.cla()
+    #ax6.cla()
     
     ax1.plot(i,dp)
     ax2.plot(i,flow)
@@ -176,6 +178,10 @@ def run(i0,irange):
     ax3.plot(i,v_drift)
     ax3.plot(i[i_min],vol_raw[i_min],'o')
     ax4.plot(i,vol)
+    #ax5.plot(i,p)
+    #pmodel = interpolate.UnivariateSpline(i,p,s = 1)
+    #ax5.plot(i,pmodel(i))
+    #ax6.plot(i,misc.derivative(pmodel,x0 = i,n = 2,dx = 15/fs))
     try:
         #ax4.plot(i[(t> tis) & (t<tie)],vol[(t> tis) & (t<tie)],'s')
         print (f'VT = {vt}, i:e = 1:{int((tee-tie)/(tie-tis))},RR = {60.0/(tee-tis)} bpm')
@@ -187,13 +193,15 @@ def run(i0,irange):
 
     
     
-    ax2.set_ylim([-100,100])
-    ax4.set_ylim([-0.5,2.0])
+    ax2.set_ylim([-200,200])
+    ax4.set_ylim([-0.1,1.5])
+    #ax6.set_ylim([-10,10])
     
     ax1.set_ylabel('dP [cm H2O]')
     ax2.set_ylabel('Flow [L/m]')
     ax3.set_ylabel('Raw VT [L]')
     ax4.set_ylabel('VT [L]')
+    #ax5.set_ylabel('P [cmH2O]')
     
     f.canvas.draw()
     return i[i_min],v_model,v_drift
@@ -202,8 +210,8 @@ plt.ion()
 f, (ax1,ax2,ax3,ax4) = plt.subplots(4,1)   
 plt.tight_layout()
 try:
-    for i0 in np.arange(i0,len(time)-irange):
+    for i0 in np.arange(1200,len(time)-irange):
         imin,v_model,v_drift = run(i0,irange)
-        plt.pause(0.01)
+        plt.pause(0.001)
 except KeyboardInterrupt:
     pass

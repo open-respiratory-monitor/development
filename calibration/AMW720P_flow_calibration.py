@@ -184,7 +184,7 @@ for i in range(len(t_starts)):
     plt.plot(t_range,dp_range,'o')
     plt.subplot(1,2,2)
     plt.plot(t_range,flow_range,'o')
-    
+#%%
 N = 4
 select_data_fit = np.polyfit(select_dp,select_flow,N)
 dp_fit = np.linspace(np.min(select_dp),np.max(select_dp),1000)
@@ -207,11 +207,29 @@ plt.legend()
 
 np.savetxt('select_cal_data.txt',np.column_stack((select_dp,select_flow)),delimiter = '\t')
 
-plt.figure(figsize = (20,6))
-plt.subplot(1,3,1)
-plt.plot(dt,flow_raw)
-plt.plot(dt,np.polyval(select_data_fit,dp))
+#plt.figure(figsize = (20,6))
+#plt.subplot(1,3,1)
+#plt.plot(dt,flow_raw)
+#plt.plot(dt,np.polyval(select_data_fit,dp))
 
 
 # Save the calibration curve parameters
 np.savetxt('Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from LPS35HW dP (cm H20) to Flow (L/m) from Honeywell AWM720P')
+
+#%% do the inverse calibration
+
+N = 4
+select_data_fit = np.polyfit(select_flow,select_dp,N)
+flow_fit = np.linspace(0,100,1000)
+dp_fit = np.polyval( select_data_fit,flow_fit)
+
+plt.figure()
+plt.title('Calibration Data: Averages Over Select Ranges')
+plt.plot(select_flow,select_dp,'ko',label = 'filtered realtime data')
+
+plt.plot(flow_fit,dp_fit,'r-',label = '%i-Deg Polynomial Fit' %N)
+
+plt.ylabel('dP (cm H20)',fontsize = 14)
+plt.xlabel('Flow (L/m)',fontsize = 14)
+plt.legend()
+np.savetxt('Inverse_Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from Flow (L/m) to LPS35HW dP (cm H20) from Honeywell AWM720P')

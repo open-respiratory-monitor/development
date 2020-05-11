@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
     request_from_slowloop = QtCore.pyqtSignal(object)
     request_to_update_cal = QtCore.pyqtSignal(object)
 
-    def __init__(self,  config, main_path, mode = 'normal', verbose = False,*args, **kwargs):
+    def __init__(self,  config, main_path, mode = 'normal', verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
         """
         Initializes the main window for the MVM GUI. See below for subfunction setup description.
@@ -54,11 +54,12 @@ class MainWindow(QtWidgets.QMainWindow):
             fast_update_time = 100
             slow_update_time = 1000
             mode_verbose = True
+            
         else:
-            fast_update_time = 100
+            fast_update_time = 10
             slow_update_time = 1000
             mode_verbose = False
-
+            
         # configuration
         self.config = config
 
@@ -75,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slowdata = data_handler.slow_data()
 
         # Start up the fast loop (data acquisition)
-        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, update_time = fast_update_time, verbose = self.verbose)
+        self.fast_loop = data_handler.fast_loop(main_path = self.main_path, update_time = fast_update_time, simulation = simulation, logdata = logdata,verbose = self.verbose)
         self.fast_loop.start()
         self.fast_loop.newdata.connect(self.update_fast_data)
 
