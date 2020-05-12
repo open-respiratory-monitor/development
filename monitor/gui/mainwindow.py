@@ -54,12 +54,12 @@ class MainWindow(QtWidgets.QMainWindow):
             fast_update_time = 100
             slow_update_time = 1000
             mode_verbose = True
-            
+
         else:
             fast_update_time = 10
             slow_update_time = 1000
             mode_verbose = False
-            
+
         # configuration
         self.config = config
 
@@ -170,11 +170,10 @@ class MainWindow(QtWidgets.QMainWindow):
             print("main: received new data from slowloop!")
         self.slowdata = data
 
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
         data.print_data()
 
     def slowloop_request(self):
         if self.verbose:
             print(f"main: received request for data from slowloop")
         self.request_from_slowloop.emit(self.fastdata)
-
