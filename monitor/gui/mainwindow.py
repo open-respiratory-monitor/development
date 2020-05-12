@@ -82,12 +82,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # start up the slow loop (calculations)
         self.slow_loop = data_handler.slow_loop(main_path = self.main_path, update_time = slow_update_time, verbose = self.verbose)
-        #self.slow_loop.start()
+        self.slow_loop.start()
         self.slow_loop.newdata.connect(self.update_slow_data)
-
-        # if the slowloop sends new data, send it to the fastloop
-        #self.slow_loop.newdata.connect(self.send_slowloop_data_to_fastloop) # tells mainloop we should send data from the main loop
-        #self.request_to_update_cal.connect(self.fast_loop.update_cal)       # sends the slowdata from the mainloop to the fastloop
 
         # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
@@ -138,11 +134,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # define the curves to plot
         self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = pen)
-        self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
+        #self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
         self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pen)
-        #self.data_line2b = self.graph2.plot(self.fastdata.dt, self.fastdata.flow_raw, pen = bluepen)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = pen)
-        self.data_line3b = self.graph3.plot(self.fastdata.dt,   self.fastdata.vol_raw*1000, pen = bluepen)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = 10 #update time of timer in ms
@@ -159,40 +153,28 @@ class MainWindow(QtWidgets.QMainWindow):
         # update the plots with the new data
 
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
-        self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
+        #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
         self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
-        self.data_line3b.setData(self.fastdata.dt,  self.fastdata.vol_raw*1000)
-        """
-        try:
-            fs = 1.0/np.abs(self.fastdata.dt[-2] - self.fastdata.dt[-1])
-            print(f"main: fs = {fs}")
-            flow_filt = utils.zerophase_lowpass(self.fastdata.flow,lf = 0.5,fs = fs)
-            self.data_line2b.setData(self.fastdata.dt, flow_filt)
-        except:
-            pass
-        """
+
 
     ### slots to handle data transfer between threads ###
     def update_fast_data(self,data):
         if self.verbose:
             print("main: received new data from fastloop!")
-            #print(f"main: dP = {data.dp[-1]}")
-            #print(f"main: raw vol = {self.fastdata.vol_raw}")
-        self.fastdata = data
 
+        self.fastdata = data
 
     def update_slow_data(self,data):
         if self.verbose:
             print("main: received new data from slowloop!")
         self.slowdata = data
 
+        os.system('cls' if os.name == 'nt' else 'clear')
+        data.print_data()
+
     def slowloop_request(self):
         if self.verbose:
             print(f"main: received request for data from slowloop")
         self.request_from_slowloop.emit(self.fastdata)
 
-    def send_slowloop_data_to_fastloop(self):
-        if self.verbose:
-            print(f"main: sending updated slowloop data to fastloop")
-        self.request_to_update_cal.emit(self.slowdata)

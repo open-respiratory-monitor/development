@@ -13,7 +13,7 @@ This is just a collection of useful functions used elsewhere in the code
 from scipy import signal
 import numpy as np
 
-def breath_detect_coarse(flow,fs,plotflag = False):
+def breath_detect_coarse(flow,fs,minpeak = 0.05,plotflag = False):
     """
     %% This function detects peaks of flow signal
     
@@ -41,7 +41,7 @@ def breath_detect_coarse(flow,fs,plotflag = False):
     minpeakwidth = fs*0.3
     peakdistance = fs*1.5
     #print('peakdistance = ',peakdistance)
-    minPeak = 0.05 # flow threshold = 0.05 (L/s)
+    minPeak = minpeak # flow threshold = 0.05 (L/s)
     minpeakprominence = 0.05
     
     peak_index, _  = signal.find_peaks(flow, 
