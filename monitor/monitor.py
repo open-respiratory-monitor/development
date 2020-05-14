@@ -16,6 +16,8 @@ import sys
 import os
 import os.path
 from PyQt5 import QtCore, QtWidgets
+import yaml
+
 
 
 from gui import mainwindow
@@ -30,8 +32,14 @@ def main():
     Main function.
     """
     # Load configuration
-    config = []
     
+    settings_file = main_path + '/config/default_settings.yaml'
+    print('settings file = ',settings_file)
+    with open(settings_file) as fsettings:
+        config = yaml.load(fsettings, Loader=yaml.FullLoader)
+    #print('Config:', yaml.dump(config), sep='\n')
+   
+    config = []
 
     app = QtWidgets.QApplication(sys.argv)
     

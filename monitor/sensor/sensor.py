@@ -149,6 +149,7 @@ class fakesensor(object):
     """
 
     def __init__(self,main_path, calfile = '/calibration/Flow_Calibration.txt',datafile = '/calibration/Simulated_Data.txt',dp_thresh = 0.0,verbose = False):
+        #datafile = '/calibration/1588992465_sensor_raw.txt'
         self.datafile = main_path + datafile
         self.verbose = verbose
         self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 1,unpack = True)
