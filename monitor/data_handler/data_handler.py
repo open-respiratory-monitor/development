@@ -94,7 +94,8 @@ class slow_data(object):
         self.rr = None
         self.ie = None
         self.c = None
-        self.dt_last = None
+        self.t_last = datetime.utcnow().timestamp()
+        self.dt_last = 0.0
 
         # pi GPIO state
         self.lowbatt = None
@@ -249,7 +250,7 @@ class fast_loop(QtCore.QThread):
 
 
 
-        dp_zero = np.mean(self.fastdata.dp[np.abs(self.fastdata.dp)<0.1])
+        dp_zero = np.mean(self.fastdata.dp[np.abs(self.fastdata.dp)<0.0])
         if np.isnan(dp_zero):
             dp_zero = 0.0
 
@@ -258,7 +259,10 @@ class fast_loop(QtCore.QThread):
         self.fastdata.dp[np.abs(self.fastdata.dp)<0.0] = 0.0
 
         self.fastdata.flow = self.sensor.dp2flow(self.fastdata.dp) - flow_zero
-
+        
+        # apply a median filter
+        self.fastdata.flow = signal.medfilt(self.fastdata.flow,11)
+        
         # log the data if we're in logdata mode
         if self.logdata:
             self.log_raw_sensor_data()
@@ -441,6 +445,21 @@ class slow_loop(QtCore.QThread):
         except Exception as e:
             print("slowloop: error calculating breath parameters: ",e)
 
+        
+        # Do these whether or not a breath is detected!
+        # how long ago was the last breath started?
+        self.slowdata.dt_last = np.round((self.t - self.slowdata.t_last),2)
+        
+        # now measure the realtime value (it fluctuates but stays near the real value, and is valuable if no breaths are delivered)
+            # we don't display a full minute so need to scale answer
+        scale = 60.0/self.fastdata.dt[-1]
+        flow_in = self.fastdata.flow[self.fastdata.flow > 0]
+        flow_out = self.fastdata.flow[self.fastdata.flow < 0]
+        mve_meas_in = np.round(np.abs(np.trapz(flow_in)/(self.fastdata.fs*60.0)*scale),1)
+        mve_meas_out = np.round(np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale),1)
+        #average the flow in and out to get a sensible result regardless of flow sensor drift
+        self.slowdata.mve_meas = np.round(np.mean([mve_meas_in, mve_meas_out]),1)
+
 
         self.check_power()
 
@@ -493,9 +512,13 @@ class slow_loop(QtCore.QThread):
         if len(self.i_min_vol) >= 2:
             # define the last breath
             self.tsi = self.fastdata.t[self.i_min_vol[-2]]
+            self.tee = self.fastdata.t[self.i_min_vol[-1]]
             self.dtsi = self.fastdata.dt[self.i_min_vol[-2]]
             self.dtee = self.fastdata.dt[self.i_min_vol[-1]]
-
+            
+            # update the time of the last breath
+            self.slowdata.t_last = self.tee
+            
             # index range of the last breath
             index_range = np.arange(self.i_min_vol[-2],self.i_min_vol[-1]+1)
 
@@ -519,15 +542,7 @@ class slow_loop(QtCore.QThread):
             # get minute volume
             # first infer it from the last breath: RR * VT
             self.slowdata.mve_inf = np.round((self.slowdata.rr * self.slowdata.vt/1000.0),1)
-            # now measure the realtime value (it fluctuates but stays near the real value, and is valuable if no breaths are delivered)
-            # we don't display a full minute so need to scale answer
-            scale = 60.0/self.fastdata.dt[-1]
-            flow_in = self.fastdata.flow[self.fastdata.flow > 0]
-            flow_out = self.fastdata.flow[self.fastdata.flow < 0]
-            mve_meas_in = np.round(np.abs(np.trapz(flow_in)/(self.fastdata.fs*60.0)*scale),1)
-            mve_meas_out = np.round(np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale),1)
-            #average the flow in and out to get a sensible result regardless of flow sensor drift
-            self.slowdata.mve_meas = np.round(np.mean([mve_meas_in, mve_meas_out]),1)
+            
 
             # get peep: average pressure over the 50 ms about the end of expiration
             dt_peep = 0.05
@@ -546,12 +561,12 @@ class slow_loop(QtCore.QThread):
             self.slowdata.pp = np.round(self.slowdata.pp,1)
             self.slowdata.vt = np.round(self.slowdata.vt,1)
 
-            # how long ago was the last breath started?
-            self.slowdata.dt_last = np.round((self.t - self.tsi),2)
+            
 
         else:
             print("slowloop: no breath detected!")
-
+            
+        
 
     def update_fast_data(self,fastdata):
         # this is a slot connected to mainwindow.newrequest

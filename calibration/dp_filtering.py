@@ -18,6 +18,7 @@ from scipy import misc
 
 flowcal = np.loadtxt('Flow_Calibration.txt',delimiter = '\t',skiprows = 1)
 
+
 def breath_detect_coarse(flow,fs,minpeak = 0.05,plotflag = False):
     """
     %% This function detects peaks of flow signal
@@ -110,39 +111,48 @@ def calculate_breath_params(i_min,i,time, vol):
     
 #%% 
 
-#time,p1,p2,dp_raw = np.loadtxt('1588972688_sensor_raw.txt',delimiter = '\t',skiprows = 1,unpack = True)
-time,p1,p2,dp_raw = np.loadtxt('Simulated_Data.txt',delimiter = '\t',skiprows = 1,unpack = True)
+time,p1,p2,dp_raw = np.loadtxt('1589499917_sensor_raw.txt',delimiter = '\t',skiprows = 1,unpack = True)
+#time,p1,p2,dp_raw = np.loadtxt('Simulated_Data.txt',delimiter = '\t',skiprows = 1,unpack = True)
 i_raw = np.arange(len(time))
 ts = 0.01# sampling time
 
 time = i_raw*ts
 
+#%%
 
 
-"""
 i0 = 0
-imax = i0+1000
+imax = i0+500
 
 i = i_raw[i0:imax]
 dp = dp_raw[i0:imax]
 flow = dp2flow(dp)
 dp_t = 0.05
-dp_zero = np.mean(dp[np.abs(dp)<dp_t])
-flow_zero = dp2flow(dp_zero)
 
-plt.figure()
+
+dp_filt = signal.medfilt(dp,5)
+dp_zero = np.mean(dp_filt[np.abs(dp_filt)<dp_t])
+
+flow_zero = dp2flow(dp_zero)
+flow_filt = signal.medfilt(flow,11)
+
+plt.figure(figsize = (12,6))
 plt.subplot(1,2,1)
 plt.plot(i,dp)
+plt.plot(i,dp_filt,'m')
 plt.plot(i,0*i)
 plt.plot(i,dp_t+0*i)
 plt.plot(i,-dp_t+0*i)
+plt.ylabel('dP')
 
 plt.subplot(1,2,2)
 plt.plot(i,flow)
 plt.plot(i,flow-flow_zero)
+plt.plot(i,flow_filt,'m')
 plt.plot(i,0*i)
+plt.ylabel('Flow')
 
-"""
+
 
 #%%
 
