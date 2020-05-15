@@ -16,7 +16,7 @@ import sys
 import os
 import os.path
 from PyQt5 import QtCore, QtWidgets
-import yaml
+#import yaml
 
 
 
@@ -33,10 +33,10 @@ def main():
     """
     # Load configuration
     
-    settings_file = main_path + '/config/default_settings.yaml'
-    print('settings file = ',settings_file)
-    with open(settings_file) as fsettings:
-        config = yaml.load(fsettings, Loader=yaml.FullLoader)
+    #settings_file = main_path + '/config/default_settings.yaml'
+    #print('settings file = ',settings_file)
+    #with open(settings_file) as fsettings:
+    #    config = yaml.load(fsettings, Loader=yaml.FullLoader)
     #print('Config:', yaml.dump(config), sep='\n')
    
     config = []
