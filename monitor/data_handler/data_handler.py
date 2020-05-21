@@ -261,7 +261,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata.flow = self.sensor.dp2flow(self.fastdata.dp)# - flow_zero
 
         # apply a median filter
-        self.fastdata.flow = signal.medfilt(self.fastdata.flow,3)
+        #self.fastdata.flow = signal.medfilt(self.fastdata.flow,3)
 
         # log the data if we're in logdata mode
         if self.logdata:

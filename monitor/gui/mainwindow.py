@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_verbose = True
 
         else:
-            fast_update_time = 25
+            fast_update_time = 10
             slow_update_time = 1000
             mode_verbose = False
 
@@ -140,7 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = green)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
-        self.t_update = 10 #update time of timer in ms
+        self.t_update = fast_update_time #update time of timer in ms
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
@@ -156,7 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
         #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
         self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
-        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
+        self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol_raw*1000) #update the data
 
 
     ### slots to handle data transfer between threads ###
