@@ -121,7 +121,25 @@ class sensor(object):
         print('p2_0 = ',self.sensor2.pressure*self.mbar2cmh20,' cmH20')
         print()
 
-    def read(self):
+    def read(self,n_samples = 1):
+        """
+        p1 = []
+        p2 = []
+        dp = []
+
+        for i in range(n_samples):
+            p1_i = self.sensor1.pressure*self.mbar2cmh20
+            p2_i = self.sensor2.pressure*self.mbar2cmh20
+            dp_i = p2_i - p1_i
+            p1.append(p1_i)
+            p2.append(p2_i)
+            dp.append(dp_i)
+
+        self.p1 = np.median(p1)
+        self.p2 = np.median(p2)
+        self.dp = np.median(dp)
+        """
+
         # Read the pressure sensors and update the values
         self.p1 = self.sensor1.pressure * self.mbar2cmh20
         self.p2 = self.sensor2.pressure * self.mbar2cmh20
@@ -132,7 +150,7 @@ class sensor(object):
         self.dp = dp
 
         # Calculate the flow
-        self.flow = self.dp2flow(self.dp)
+        #self.flow = self.dp2flow(self.dp)
 
 
 class fakesensor(object):
@@ -155,21 +173,21 @@ class fakesensor(object):
         self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 1,unpack = True)
 
         self.linenum = 0
-        
+
         self.lastline = len(self.time_arr)-1
-        
+
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
 
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
         self.calfile = calfile
-        
+
         # flow calibration polynomial
         if self.verbose:
             print(f"trying to load calfile at {calfile}")
         self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
-        
+
         #print statement
         print(f"Reading Simulated Data from File: {self.datafile}")
 
@@ -177,25 +195,25 @@ class fakesensor(object):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
         return flow
-        
+
     #def rezero(self):
-        
-    
+
+
     def read(self):
-        
+
         # read the fake data from the current line
         self.p1 = self.p1_arr[self.linenum]
         self.p2 = self.p2_arr[self.linenum]
         self.dp = self.p2 - self.p1
-        
+
         # increment the line number
         self.linenum += 1
-        
+
         # start again if you hit the end of the file
         if self.linenum >= self.lastline:
             self.linenum = 0
-        
-        
+
+
 if __name__ == "__main__":
     try:
         print("Loading real sensor...")
@@ -208,6 +226,4 @@ if __name__ == "__main__":
         sensor = fakesensor(main_path = main_path,verbose = True)
     except Exception as e:
         print("Could not load fake sensor data: ",e)
-
-
 

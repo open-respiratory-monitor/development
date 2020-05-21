@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_verbose = True
 
         else:
-            fast_update_time = 10
+            fast_update_time = 25
             slow_update_time = 1000
             mode_verbose = False
 
@@ -124,19 +124,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graph3.setLabel('bottom', 'Time', 's', **labelStyle)
 
         # change the plot range
-        self.graph1.setYRange(-40,40,padding = 0.1)
-        self.graph2.setYRange(-100,100,padding = 0.1)
-        self.graph3.setYRange(0,1500,padding = 0.1)
+        #sef.graph1.setYRange(-40,40,padding = 0.1)
+        #self.graph2.setYRange(-100,100,padding = 0.1)
+        #self.graph3.setYRange(0,1500,padding = 0.1)
 
         # make a QPen object to hold the marker properties
         yellow = pg.mkPen(color = 'y',width = 2)
         pink = pg.mkPen(color = 'm', width = 2)
         green = pg.mkPen(color = 'g', width = 2)
-        
+
         # define the curves to plot
         self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = yellow)
         #self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
-        self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.flow,     pen = pink)
+        self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.dp, pen = pink)
         self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = green)
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
