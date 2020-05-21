@@ -1,0 +1,5 @@
+# Calibration data from LPS35HW dP (cm H20) to Flow (L/m) using  Hamilton SpiroQuant H sensor, using curve from: https://www.envitec.com/uploads/products/00000_0484_2017_12_22_092836.pdf
+1.425965371924999558e-01
+-3.214375047116406758e+00
+4.085141019103283355e+01
+0.000000000000000000e+00

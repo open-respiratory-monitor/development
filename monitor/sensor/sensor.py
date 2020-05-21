@@ -45,7 +45,7 @@ class sensor(object):
         dp = differential pressure (p2 - p1) in cmH20
     """
 
-    def __init__(self,main_path, calfile = '/calibration/Flow_Calibration.txt',dp_thresh = 0.0,verbose = False):
+    def __init__(self,main_path, mouthpiece = 'hamilton',dp_thresh = 0.0,verbose = False):
 
         # run in verbose mode?
         self.verbose = verbose
@@ -70,18 +70,26 @@ class sensor(object):
         self.sensor1.low_pass_enabled = True
         self.sensor2.low_pass_enabled = True
 
+        # define the calibration file based on the mouthpiece
+        self.mouthpiece = mouthpiece
+        if self.mouthpiece.lower() == 'hamilton':
+            self.calfile = '/calibration/flow_calibration_hamilton.txt'
+        elif self.mouthpiece.lower() == 'iqspiro':
+            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
 
+        else:
+            raise ImportError('specified mouthpiece not defined')
+                
 
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
 
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
-        self.calfile = calfile
 
         # flow calibration polynomial
         if self.verbose:
-            print(f"trying to load calfile at {calfile}")
+            print(f"trying to load calfile at {self.calfile}")
         self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
 
 

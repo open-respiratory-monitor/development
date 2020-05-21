@@ -214,7 +214,7 @@ np.savetxt('select_cal_data.txt',np.column_stack((select_dp,select_flow)),delimi
 
 
 # Save the calibration curve parameters
-np.savetxt('Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from LPS35HW dP (cm H20) to Flow (L/m) from Honeywell AWM720P')
+np.savetxt('flow_calibration_iqspiro.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from LPS35HW dP (cm H20) to Flow (L/m) from Honeywell AWM720P')
 
 #%% do the inverse calibration
 
@@ -232,4 +232,35 @@ plt.plot(flow_fit,dp_fit,'r-',label = '%i-Deg Polynomial Fit' %N)
 plt.ylabel('dP (cm H20)',fontsize = 14)
 plt.xlabel('Flow (L/m)',fontsize = 14)
 plt.legend()
-np.savetxt('Inverse_Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from Flow (L/m) to LPS35HW dP (cm H20) from Honeywell AWM720P')
+np.savetxt('Inverse_Flow_Calibration.txt',select_data_fit,delimiter = '\t', header = 'Calibration data from Flow (L/m) to LPS35HW dP (cm H20) using IQspiro Mouthpiece, calibrated with Honeywell AWM720P')
+
+#%% get the calibration curve for the hamilton mouthpiece
+
+# hamilton equation from here: https://www.envitec.com/uploads/products/00000_0484_2017_12_22_092836.pdf
+dp_mbar2flow = np.array([0.1512, -3.3424, 41.657, 0.0])
+
+mbar2cmh2o = 1.01972
+
+dp_mbar = np.linspace(0,3,1000)
+dp_cmh2o = dp_mbar * mbar2cmh2o 
+
+flow = np.polyval(dp_mbar2flow,dp_mbar)
+
+dp_cmh2o2flow = 0*dp_mbar2flow
+n = np.flip(np.arange(len(dp_mbar2flow)))
+
+for i in np.arange(len(n)):
+    print('n = ',n[i])
+    dp_cmh2o2flow[i] = dp_mbar2flow[i]/(mbar2cmh2o**n[i])
+
+plt.figure()
+plt.title(' Hamilton Characteristic Curve ')
+plt.plot(flow,dp_mbar,'ko')
+plt.plot(np.polyval(dp_cmh2o2flow,dp_cmh2o),dp_mbar,'r-')
+plt.xlabel('flow [slpm]')
+plt.ylabel('dp [mbar]')
+
+
+# save the calibration curve parameters
+np.savetxt('flow_calibration_hamilton.txt',dp_cmh2o2flow,delimiter = '\t', header = 'Calibration data from LPS35HW dP (cm H20) to Flow (L/m) using  Hamilton SpiroQuant H sensor, using curve from: https://www.envitec.com/uploads/products/00000_0484_2017_12_22_092836.pdf')
+
