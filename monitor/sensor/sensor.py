@@ -174,7 +174,7 @@ class fakesensor(object):
         dp = differential pressure (p2 - p1) in cmH20
     """
 
-    def __init__(self,main_path, calfile = '/calibration/Flow_Calibration.txt',datafile = '/calibration/Simulated_Data.txt',dp_thresh = 0.0,verbose = False):
+    def __init__(self,main_path, mouthpiece = 'iqspiro',datafile = '/calibration/Simulated_Data.txt',dp_thresh = 0.0,verbose = False):
         #datafile = '/calibration/1589499917_sensor_raw.txt'
         self.datafile = main_path + datafile
         self.verbose = verbose
@@ -184,16 +184,25 @@ class fakesensor(object):
 
         self.lastline = len(self.time_arr)-1
 
+        # define the calibration file based on the mouthpiece
+        self.mouthpiece = mouthpiece
+        if self.mouthpiece.lower() == 'hamilton':
+            self.calfile = '/calibration/flow_calibration_hamilton.txt'
+        elif self.mouthpiece.lower() == 'iqspiro':
+            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
+
+        else:
+            raise ImportError('specified mouthpiece not defined')
+
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
 
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
-        self.calfile = calfile
 
         # flow calibration polynomial
         if self.verbose:
-            print(f"trying to load calfile at {calfile}")
+            print(f"trying to load calfile at {self.calfile}")
         self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
 
         #print statement

@@ -48,7 +48,7 @@ mvm_p1 = mvmdata[2]
 mvm_flow = mvmdata[5]
 
 # resample pressures and flow so it works out to nicer tidal volumes with the 100 Hz sample rate
-n = 5
+n = 3
 p1 = mvm_p1[0::n]
 mvm_flow = mvm_flow[0::n]
 time = time[0::n] 

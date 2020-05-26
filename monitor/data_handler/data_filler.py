@@ -66,10 +66,11 @@ class DataFiller():
         self._monitors = {}
         self._colors = {}
         self._config = config
-        self._n_samples = self._config['nsamples']
-        self._n_historic_samples = self._config.get('historic_nsamples',
-                                                    200)
-        self._sampling = self._config['sampling_interval']
+        self._display_time = self._config['display_time']
+        self._sampling = self._config['fastdata_interval']
+        self._n_samples = int(self._display_time*1000/self._sampling )
+        self._n_historic_samples = 2*self._n_samples
+        
         self._time_window = self._n_samples * self._sampling  # seconds
         self._xdata = np.linspace(-self._time_window, 0, self._n_samples)
         self._frozen = False
@@ -342,8 +343,8 @@ class DataFiller():
         - data_point: (float) the data point to add
         '''
 
-        # print('NORMAL: Received data for monitor', name)
-
+        #print('NORMAL: Received data for monitor', name)
+        
         if name in self._historic_data:
             # Save to the historic data dict
             self._historic_data[name][:-1] = self._historic_data[name][1:]
@@ -366,9 +367,12 @@ class DataFiller():
                 self._data[name][-1] = data_point
 
         if name in self._plots:
+            #print('datafiller: updating plot: ',name)
             self.update_plot(name)
 
         if name in self._monitors:
+            #print(f'data_filler: adding to monitor {name}: {data_point}')
+            #print('datafiller: updating monitor: ',name)
             self.update_monitor(name)
 
     def update_plot(self, name):
@@ -378,6 +382,8 @@ class DataFiller():
         arguments:
         - name: the name of the plot to update
         '''
+        
+        #print("updating plot: ",name)
 
         if not self._frozen:
             # Update the displayed plot with current data.
@@ -440,7 +446,7 @@ class DataFiller():
         arguments:
         - name: the name of the monitor to update
         '''
-
+        #print('updating monitor: ',name)
         if name in self._monitors:
             last_data_idx = self._looping_data_idx[name] - \
                 1 if self._looping else -1

@@ -2,6 +2,8 @@
 # list of observables to expect from the get_all function call
 # The returned dict will use those as keys. Order matters.
 
+settings_file_path: '/home/pi/settings.txt'
+
 get_all_fields:
   - pressure
   - flow
@@ -39,13 +41,25 @@ unlockscreen_code: "32115"
 # length of time to display on graphs (s)
 display_time: 11
 
-# time in seconds between two data retrieval
-fastdata_interval: 0.1
+# time in ms between two data retrieval
+fastdata_interval: 10
 
 # time in seconds between two status checks
-slowdata_interval: 1
+slowdata_interval: 1000
 
+# Number of samples to display in the graphs:
+#nsamples: 100
 
+# time in seconds between two data retrieval
+#sampling_interval: 0.1
+
+# time in seconds between two status checks
+#status_sampling_interval: 0.5
+
+# number of samples used for the y-axes plot autoscale feature (default:
+# 200)
+#historic_nsamples: 200
+# The parameters that can be
 
 
 # This is the string returned by the ESP in case of success
@@ -106,7 +120,7 @@ start_mode_timeout: 2000 # [ms] between pressing Start and allowing Stop (max 30
 #       None: Display auto scaling text.
 #       bar [low] [high]: Show a progress bar with minimum [low] and maximum [high].
 monitors:
-    
+
     peak: 
         name: "Pmax<sub>insp</sub>" 
         init: 40
@@ -117,7 +131,7 @@ monitors:
         alarmcolor: "red"
         observable: peak
     
-     peep: 
+    peep: 
         name: "PEEP"
         init: 60
         step: 1
@@ -188,7 +202,7 @@ monitors:
         observable: i_to_e_ratio
     
     cstat:
-        name: "C<sub>stat<\sub>"
+        name: "C<sub>stat</sub>"
         init: 50
         step: 1
         dec_precision: 0
@@ -308,7 +322,7 @@ alarms:
 
     respiratory_rate:
         min: 0
-        setmin:0
+        setmin: 0
         max: 99
         setmax: 40
         under_threshold_code: 1048576
@@ -321,7 +335,7 @@ alarms:
         min: null
         max: 1
         under_threshold_code: 199
-        over_threshold_code: null
+        over_threshold_code: 200
         observable: battery_low
         linked_monitor: battery_low
         priority: "high"
@@ -329,7 +343,7 @@ alarms:
     battery_charge:
         min: 0
         max: null
-        under_threshold_code: null
+        under_threshold_code: 15
         over_threshold_code: 16
         observable: battery_charge
         linked_monitor: battery_charge
