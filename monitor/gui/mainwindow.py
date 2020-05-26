@@ -346,6 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         
         """
+        """
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
         self.t_update = self.fast_update_time #update time of timer in ms
@@ -353,7 +354,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
         self.timer.start()
-        
+        """
         
         
         
@@ -649,7 +650,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("main: received new data from fastloop!")
 
         self.fastdata = data
-        #self.update_plots()
+        self.update_plots()
         
 
     def update_slow_data(self,data):
