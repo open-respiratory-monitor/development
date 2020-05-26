@@ -39,7 +39,7 @@ unlockscreen_interval: 2000
 unlockscreen_code: "32115"
 
 # length of time to display on graphs (s)
-display_time: 2
+display_time: 5
 
 # time in ms between two data retrieval
 fastdata_interval: 10
@@ -48,7 +48,7 @@ fastdata_interval: 10
 slowdata_interval: 1000
 
 # Number of samples to display in the graphs:
-#nsamples: 100
+nsamples: 100
 
 # time in seconds between two data retrieval
 #sampling_interval: 0.1

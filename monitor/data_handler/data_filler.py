@@ -68,7 +68,7 @@ class DataFiller():
         self._config = config
         self._display_time = self._config['display_time']
         self._sampling = self._config['fastdata_interval']
-        self._n_samples = int(self._display_time*1000/self._sampling )
+        self._n_samples = self._config['nsamples'] #int(self._display_time*1000/self._sampling )
         self._n_historic_samples = 2*self._n_samples
         
         self._time_window = self._n_samples * self._sampling  # seconds
