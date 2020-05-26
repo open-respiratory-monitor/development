@@ -186,7 +186,9 @@ class GuiAlarms:
         """
         print(f'GUI ALARM: there are [{len(self._alarmed_monitors)}] alarmed monitors: ',self._alarmed_monitors)
         # sound audio alarm if there are any alarmed monitors
-        self.sound_alarms()
+        
+        if self._armed:
+            self.sound_alarms()
         for observable in data:
             item = self._get_by_observable(observable)
             if item is not None:

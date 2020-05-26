@@ -73,7 +73,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fast_update_time = 10
             self.slow_update_time = 1000
             self.mode_verbose = False
-
+        
+        # show full screen if running on a raspberry pi
+        if 'raspberrypi' in os.uname():
+            self.showFullScreen()
+        
         # configuration
         self.config = config
 
