@@ -39,6 +39,7 @@ import sys
 from datetime import datetime
 from scipy import interpolate
 from scipy import signal
+from scipy import integrate
 
 try:
     import RPi.GPIO as GPIO
@@ -197,6 +198,8 @@ class fast_loop(QtCore.QThread):
 
         self.correct_vol = correct_vol
 
+        self.vol_integral_to_now = 0.0
+
         if self.correct_vol:
             # slow down the loop so that it doesn't crash!
             if self.ts <= 25:
@@ -266,9 +269,15 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   =    self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   =    self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   =    self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        self.fastdata.flow =    self.add_new_point(self.fastdata.flow, self.sensor.dp2flow(self.sensor.dp), self.num_samples_to_hold)
-        #self.fastdata.flow = signal.detrend(self.fastdata.flow)
-        #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, np.trapz(self.fastdata.flow)/(self.fastdata.fs*60.0),self.num_samples_to_hold)
+        newflow = self.sensor.dp2flow(self.sensor.dp)
+        self.fastdata.flow =    self.add_new_point(self.fastdata.flow, newflow, self.num_samples_to_hold)
+        #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
+        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
+        #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
+        #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, (np.sum(self.fastdata.flow) + self.vol_integral_to_now)/(self.fastdata.fs*60.0),self.num_samples_to_hold)
+        #self.fastdata.vol_raw = integrate.cumtrapz(self.fastdata.flow, initial = self.vol_integral_to_now)/(self.fastdata.fs*60.0)
+        #self.fastdata.vol_raw = signal.detrend(self.fastdata.vol_raw)
+        self.vol_integral_to_now = self.fastdata.vol_raw[-1]
 
         #dp_zero = np.mean(self.fastdata.dp[np.abs(self.fastdata.dp)<0.0])
         #if np.isnan(dp_zero):
@@ -288,7 +297,7 @@ class fast_loop(QtCore.QThread):
             self.log_raw_sensor_data()
 
         # calculate the raw volume
-        self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fastdata.fs*60.0)
+        #self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fastdata.fs*60.0)
         #self.fastdata.vol_raw = signal.detrend(self.fastdata.vol_raw)
 
         if self.correct_vol:
@@ -313,7 +322,7 @@ class fast_loop(QtCore.QThread):
         # send data to the datafiller
         self.fastdata.all_fields.update({'pressure' : self.fastdata.p1[-1]})
         self.fastdata.all_fields.update({'flow' : self.fastdata.flow[-1]})
-        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]})
+        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000}) # in mL
 
 
 

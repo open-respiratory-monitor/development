@@ -48,6 +48,7 @@ class DataFiller():
         _looping            (bool) True displays looping plots
         _looping_data_idx   (int) The x index of the looping line
         _looping_lines      (dict) A dict of InfiniteLines
+        _looping_restart    (bool) True if the loop is starting from the beginning again
     '''
 
     def __init__(self, config):
@@ -70,7 +71,7 @@ class DataFiller():
         self._sampling = self._config['fastdata_interval']
         self._n_samples = self._config['nsamples'] #int(self._display_time*1000/self._sampling )
         self._n_historic_samples = 2*self._n_samples
-        
+
         self._time_window = self._n_samples * self._sampling  # seconds
         self._xdata = np.linspace(-self._time_window, 0, self._n_samples)
         self._frozen = False
@@ -79,6 +80,7 @@ class DataFiller():
         self._looping_data_idx = {}
         self._looping_lines = {}
         self._x_label = None
+        self._looping_restart = False
 
     def connect_plot(self, plotname, plot):
         '''
@@ -344,7 +346,7 @@ class DataFiller():
         '''
 
         #print('NORMAL: Received data for monitor', name)
-        
+
         if name in self._historic_data:
             # Save to the historic data dict
             self._historic_data[name][:-1] = self._historic_data[name][1:]
@@ -356,9 +358,10 @@ class DataFiller():
                 self._data[name][self._looping_data_idx[name]] = data_point
 
                 self._looping_data_idx[name] += 1
-
+                self._looping_restart = False
                 if self._looping_data_idx[name] == self._n_samples:
                     self._looping_data_idx[name] = 0
+                    self._looping_restart = True
             else:
                 # Scrolling plots - shift data 1 sample left
                 self._data[name][:-1] = self._data[name][1:]
@@ -382,7 +385,7 @@ class DataFiller():
         arguments:
         - name: the name of the plot to update
         '''
-        
+
         #print("updating plot: ",name)
 
         if not self._frozen:

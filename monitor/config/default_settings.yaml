@@ -38,8 +38,8 @@ unlockscreen_interval: 2000
 # Unlock code: must use digits from 1-5
 unlockscreen_code: "32115"
 
-# length of time to display on graphs (s)
-display_time: 5
+# length of time to store for the breath calculations
+display_time: 11
 
 # time in ms between two data retrieval
 fastdata_interval: 10
