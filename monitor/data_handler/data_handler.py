@@ -77,7 +77,7 @@ class fast_data(object):
         self.dt = np.array([])    # dt since first sample in vector
         self.t = np.array([])     # ctime in seconds
         self.fs = []
-        
+
         # all_fields (this is how the data filler wants data)
         self.all_fields = dict()
 
@@ -158,7 +158,7 @@ class fast_loop(QtCore.QThread):
         self.main_path = main_path
         if self.verbose:
             print(f"fastloop: main path = {self.main_path}")
-            
+
         #self.data_filler = data_filler
         self.config = config
 
@@ -183,7 +183,7 @@ class fast_loop(QtCore.QThread):
         self.fastdata.fs = 1.0/self.ts
 
         # length of vectors
-        
+
         self.num_samples_to_hold = int(self.time_to_display*1000/self.ts )
         if self.verbose:
             print(f"fastloop: num samples to hold = {self.num_samples_to_hold}")
@@ -194,17 +194,17 @@ class fast_loop(QtCore.QThread):
         # should we try to do a realtime spline correction to the volume?
             # this makes the plots better but stresses the pi to do these calculations fast.
             # practical limit for this seems to be with loop clock at 25 ms
-            
+
         self.correct_vol = correct_vol
-        
+
         if self.correct_vol:
             # slow down the loop so that it doesn't crash!
             if self.ts <= 25:
                 self.ts = 25
             else:
                 pass
-            
-        
+
+
 
 
         # Set up the sensor
@@ -289,8 +289,8 @@ class fast_loop(QtCore.QThread):
 
         # calculate the raw volume
         self.fastdata.vol_raw = np.cumsum(self.fastdata.flow)/(self.fastdata.fs*60.0)
-        self.fastdata.vol_raw = signal.detrend(self.fastdata.vol_raw)
-        
+        #self.fastdata.vol_raw = signal.detrend(self.fastdata.vol_raw)
+
         if self.correct_vol:
             try:
                 # correct the detrended volume signal using the slowdata spline fit
@@ -302,22 +302,22 @@ class fast_loop(QtCore.QThread):
                 self.fastdata.vol_drift = 0.0*self.fastdata.vol_raw
 
         else:
-            
-            self.fastdata.vol_drift = 0.0*self.fastdata.vol_raw 
-            
+
+            self.fastdata.vol_drift = 0.0*self.fastdata.vol_raw
+
             self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.vol_drift
 
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
-        
+
         # send data to the datafiller
         self.fastdata.all_fields.update({'pressure' : self.fastdata.p1[-1]})
         self.fastdata.all_fields.update({'flow' : self.fastdata.flow[-1]})
         self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]})
-     
-        
-        
-        
+
+
+
+
     def log_raw_sensor_data(self):
 
         self.sensor_datafile.write('%f \t %f \t %f \t %f\n' %(self.fastdata.t[-1],self.fastdata.p1[-1],self.fastdata.p2[-1],self.fastdata.dp[-1]))
@@ -390,7 +390,7 @@ class slow_loop(QtCore.QThread):
 
         # run in verbose mode?
         self.verbose = verbose
-        
+
         self.config = config
         #self.data_filler = data_filler
 
@@ -413,7 +413,7 @@ class slow_loop(QtCore.QThread):
 
         # loop sample frequency - starts out as 1/self.ts but then is updated to the real fs
         self.fs = 1.0/self.ts
-        
+
         # the indices of the volume minima
         self.i_min_vol = []
 
@@ -457,10 +457,10 @@ class slow_loop(QtCore.QThread):
             2. fit the mimima and maxima of the volume signal using peak finder
             3. calculate the breath parameters of the last breath:
         """
-        
-        
-            
-        
+
+
+
+
         self.index +=1
         if self.verbose:
             print("\nslowloop: %d" % self.index)
@@ -469,33 +469,33 @@ class slow_loop(QtCore.QThread):
         self.request_fastdata.emit()
         # only do all this effort if there's actually data received from the fastloop:
         if len(self.fastdata.p1 > 0):
-            
+
             # note the time the loop is executed
             self.t_obj = datetime.utcnow()
             self.t = self.t_obj.timestamp()
-    
+
             # try to fit a spline
             try:
                 # find the volume minima
                 self.find_vol_min()
-    
+
                 # calculate breath parameters
                 #self.calculate_breath_params()
             except Exception as e:
                 print("slowloop: vol min calc error: ",e)
-    
+
             # try to calculate the breath parameters
             try:
                 self.calculate_breath_params()
-    
+
             except Exception as e:
                 print("slowloop: error calculating breath parameters: ",e)
-    
-    
+
+
             # Do these whether or not a breath is detected!
             # how long ago was the last breath started?
             self.slowdata.dt_last = np.round((self.t - self.slowdata.t_last),2)
-    
+
             # now measure the realtime value (it fluctuates but stays near the real value, and is valuable if no breaths are delivered)
                 # we don't display a full minute so need to scale answer
             scale = 60.0/self.fastdata.dt[-1]
@@ -505,11 +505,11 @@ class slow_loop(QtCore.QThread):
             mve_meas_out = np.round(np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale),1)
             #average the flow in and out to get a sensible result regardless of flow sensor drift
             self.slowdata.mve_meas = np.round(np.mean([mve_meas_in, mve_meas_out]),1)
-    
-    
+
+
             self.check_power()
-    
-    
+
+
             # tell main that there's new slow data: emit the newdata signal
             self.newdata.emit(self.slowdata)
         else:
