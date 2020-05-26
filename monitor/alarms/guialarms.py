@@ -2,7 +2,20 @@
 Alarm facility.
 """
 
+import os
+import sys
+
+# add the wsp directory to the PATH
+main_path = os.path.dirname(os.getcwd())
+sys.path.insert(1, main_path)
+
+# import custom modules
+
+from utils import utils
+
+
 from copy import copy
+from audio import audio
 
 class GuiAlarms:
     """
@@ -40,9 +53,11 @@ class GuiAlarms:
         self._monitors = monitors
         self._armed = True
         self._mon_to_obs = {}
+        
+        self._audio_alarm = audio.audio_alarm(filepath = main_path + '/monitor/audio')
 
         for obs_name, settings in self._obs.items():
-            print('adding new alarm: ',obs_name)
+            print('guialarms: adding new alarm: ',obs_name)
             self._mon_to_obs[settings['linked_monitor']] = obs_name
             settings['min'] = settings.get('min', None)
             settings['max'] = settings.get('max', None)
@@ -169,11 +184,26 @@ class GuiAlarms:
         Arguments:
         - data: dict values, keyed by observable name.
         """
+        print(f'GUI ALARM: there are [{len(self._alarmed_monitors)}] alarmed monitors: ',self._alarmed_monitors)
+        # sound audio alarm if there are any alarmed monitors
+        self.sound_alarms()
         for observable in data:
             item = self._get_by_observable(observable)
             if item is not None:
                 self._test_thresholds(item, data[observable])
+        
 
+    
+    def sound_alarms(self):
+        try:
+            #print('GUI ALARM: sounding alarm if there are any alarms')
+            if len(self._alarmed_monitors)>0:
+                self._audio_alarm.sound_continuous()
+            elif len(self._alarmed_monitors) == 0:
+                self._audio_alarm.silence()
+        except Exception as e:
+            print('GUI ALARM: Could not sound audio alarm: ',e)
+        
     def has_valid_minmax(self, name):
         """
         Check if max and min are not None.
@@ -289,4 +319,5 @@ class GuiAlarms:
         """
         self._armed = False
 
-        
+if __name__ == '__main__':
+    audio_alarm = audio.audio_alarm(filepath = main_path + '/audio/')

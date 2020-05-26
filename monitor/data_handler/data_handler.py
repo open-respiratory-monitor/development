@@ -141,6 +141,7 @@ class fast_loop(QtCore.QThread):
     # define a new signal that will be used to send updated data back to the main thread
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
+    
 
     def __init__(self, main_path, config, correct_vol = False, simulation = False,logdata = False,verbose = False):
 
@@ -198,7 +199,7 @@ class fast_loop(QtCore.QThread):
 
         self.correct_vol = correct_vol
 
-        self.vol_integral_to_now = 0.0
+        
 
         if self.correct_vol:
             # slow down the loop so that it doesn't crash!
@@ -222,8 +223,16 @@ class fast_loop(QtCore.QThread):
             filename = str(int(datetime.utcnow().timestamp()))
             self.sensor_datafile = open(filename + "_sensor_raw.txt","w")
             self.sensor_datafile.write('time \t p1 \t p2 \t dp')
-
-
+        
+        self.sensor.read()
+        self.vol_integral_to_now = 0.0
+        self.vol_offset = self.sensor.dp2flow(self.sensor.dp)/(self.fastdata.fs*60.0)*1000
+        print('##### INITIAL VOLUME OFFSET = ',self.vol_offset)
+        
+        
+    def update_vol_offset(self):
+        self.vol_offset = np.min(self.fastdata.vol*1000)
+        print('\n\n######## NEW VOLUME OFFSET = ',self.vol_offset,'\n\n')
 
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
@@ -270,9 +279,11 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p2   =    self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   =    self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
         newflow = self.sensor.dp2flow(self.sensor.dp)
+        
         self.fastdata.flow =    self.add_new_point(self.fastdata.flow, newflow, self.num_samples_to_hold)
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
         self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
+        
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
         #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, (np.sum(self.fastdata.flow) + self.vol_integral_to_now)/(self.fastdata.fs*60.0),self.num_samples_to_hold)
         #self.fastdata.vol_raw = integrate.cumtrapz(self.fastdata.flow, initial = self.vol_integral_to_now)/(self.fastdata.fs*60.0)
@@ -322,7 +333,7 @@ class fast_loop(QtCore.QThread):
         # send data to the datafiller
         self.fastdata.all_fields.update({'pressure' : self.fastdata.p1[-1]})
         self.fastdata.all_fields.update({'flow' : self.fastdata.flow[-1]})
-        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000}) # in mL
+        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000 - self.vol_offset}) # in mL
 
 
 
@@ -540,6 +551,9 @@ class slow_loop(QtCore.QThread):
         ## find the min of the volume signal using peak finder ##
 
         """
+        # step 0: detrend the volume
+        self.fastdata.vol = signal.detrend(self.fastdata.vol)
+        
         # step 1: find index of min and max
         self.i_min_vol = utils.breath_detect_coarse(-1*self.fastdata.vol, fs = self.fastdata.fs,minpeak = 0.0)
 

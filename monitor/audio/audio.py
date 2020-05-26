@@ -5,6 +5,14 @@ Created on Wed May 13 10:12:25 2020
 
 @author: nlourie
 """
+
+import os
+import sys
+
+# add the wsp directory to the PATH
+main_path = os.path.dirname(os.getcwd())
+sys.path.insert(1, main_path)
+
 from PyQt5 import uic, QtCore, QtGui, QtWidgets
 import time
 import sounddevice
@@ -12,11 +20,13 @@ import soundfile
 
 class audio_alarm(QtCore.QThread):
     
-    def __init__(self,alarm_sound_high_file = 'hamilton_high.wav', alarm_sound_low_file = 'hamilton_low.wav'):
+    def __init__(self,filepath = os.getcwd(), alarm_sound_high_file = 'hamilton_high.wav', alarm_sound_low_file = 'hamilton_low.wav'):
+        
+        
         
         QtCore.QThread.__init__(self)
-        self.alarm_sound_high = soundfile.read(alarm_sound_high_file)
-        self.alarm_sound_low  = soundfile.read(alarm_sound_low_file)
+        self.alarm_sound_high = soundfile.read(filepath + '/' + alarm_sound_high_file)
+        self.alarm_sound_low  = soundfile.read(filepath + '/' +alarm_sound_low_file)
         self.set_priority('high')
         
     

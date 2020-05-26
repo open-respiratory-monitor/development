@@ -30,13 +30,13 @@ class SnoozeButton:
     - _code: The alarm code that the user is currently dealing with
     - _mode: Whether the current alarm is an ERROR or a WARNING
     """
-    def __init__(self, esp32, alarm_h, alarmsnooze):
+    def __init__(self,  alarm_h, alarmsnooze):
         """
         Constructor
 
         Arguments: see relevant class members
         """
-        self._esp32 = esp32
+        
         self._alarm_h = alarm_h
         self._alarmsnooze = alarmsnooze
 
@@ -184,14 +184,14 @@ class AlarmHandler:
     - _snooze_btn: SnoozeButton that manipulates _alarmsnooze
     """
 
-    def __init__(self, config, esp32, alarmbar):
+    def __init__(self, config,  alarmbar):
         """
         Constructor
 
         Arguments: see relevant class members.
         """
 
-        self._esp32 = esp32
+        #self._esp32 = esp32
 
         self._alarm_timer = QtCore.QTimer()
         self._alarm_timer.timeout.connect(self.handle_alarms)
@@ -204,7 +204,7 @@ class AlarmHandler:
         self._alarmstack = alarmbar.findChild(QtWidgets.QHBoxLayout, "alarmstack")
         self._alarmsnooze = alarmbar.findChild(QtWidgets.QPushButton, "alarmsnooze")
 
-        self._snooze_btn = SnoozeButton(self._esp32, self, self._alarmsnooze)
+        self._snooze_btn = SnoozeButton( self, self._alarmsnooze)
 
     def handle_alarms(self):
         """

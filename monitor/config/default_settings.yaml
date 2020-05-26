@@ -36,7 +36,7 @@ alarminterval: 1
 # Time [ms] required to hold down UNLOCK before screen is unlocked
 unlockscreen_interval: 2000
 # Unlock code: must use digits from 1-5
-unlockscreen_code: "32115"
+unlockscreen_code: "12345"
 
 # length of time to store for the breath calculations
 display_time: 11
@@ -227,8 +227,8 @@ monitors:
         init: 100 
         step: 1
         map:
-            0: "Charged"
-            1: "Low Batt"
+            1: "Charged"
+            0: "Low Batt"
         units: null
         dec_precision: 0
         color: "rgb(255,255,255)"
@@ -241,8 +241,8 @@ monitors:
         init: 100 
         step: 1
         map:
-          0: "AC"
-          1: "Battery"
+          1: "AC"
+          0: "Battery"
         units: null
         dec_precision: 0
         color: "rgb(255,255,255)"

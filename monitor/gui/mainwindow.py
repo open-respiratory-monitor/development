@@ -33,6 +33,8 @@ from monitor_class.Monitor import Monitor
 #from messagebar.messagebar import MessageBar
 #from numpad.numpad import NumPad
 from alarms.guialarms import GuiAlarms
+from alarm_handler import AlarmHandler
+
 #from communication.fake_esp32serial import FakeESP32Serial
 #from alarm_handler import AlarmHandler
 
@@ -50,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # this is a signal that sends fastdata from the mainloop to the slowloop
     request_from_slowloop = QtCore.pyqtSignal(object)
     request_to_update_cal = QtCore.pyqtSignal(object)
+    update_vol_offset = QtCore.pyqtSignal()
 
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
@@ -110,6 +113,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
 
+        # rezero the volume offset
+        self.update_vol_offset.connect(self.fast_loop.update_vol_offset)
+
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
         ### GUI stuff ###
@@ -122,7 +128,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main = self.findChild(QtWidgets.QWidget, "main")
         #self.initial = self.findChild(QtWidgets.QWidget, "initial")
         #self.startup = self.findChild(QtWidgets.QWidget, "startup")
+        self.alarmbar = self.findChild(QtWidgets.QWidget, "alarmbar")
 
+        
         '''
         Get the center pane (plots) widgets
         '''
@@ -278,6 +286,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_downalarm.pressed.connect(
             self.alarms_settings.move_selected_down)
         self.button_backalarms.pressed.connect(self.exit_alarms)
+
+
+        '''
+        Start the alarm handler, which will check for ESP alarms
+        '''
+        self.alarm_h = AlarmHandler(self.config, self.alarmbar)
 
         # The alarms are from the default_settings.yaml config file
         # self.alarms = {}
@@ -585,8 +599,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.data_filler.add_data_point(key,self.fastdata.all_fields[key])
             #check if the looping is restarting
             if self.data_filler._looping_restart:
-                print('main: restarting loop on plots')
-
+                if True:
+                    print('main: restarting loop on plots')
+                self.update_vol_offset.emit()
+                
     def update_monitors(self):
         """
         displayed_monitors:
@@ -631,12 +647,28 @@ class MainWindow(QtWidgets.QMainWindow):
         for key in self.monitor_mapping.keys():
             try:
                 value = self.monitor_mapping[key]
-                print(f'main: adding to {key}: {value}')
+                if self.verbose:
+                    print(f'main: adding to {key}: {value}')
                 self.data_filler.add_data_point(key,value)
 
             except Exception as e:
-                print(f'main: could not update monitor {key}: ',e)
+                #print(f'main: could not update monitor {key}: ',e)
+                pass
+         
+        # check for alarms
+        """
+        self.gui_alarm = GuiAlarms(config, self.monitors)
 
+        print('trying to connect alarms')
+        for monitor in self.monitors.values():
+            monitor.connect_gui_alarm(self.gui_alarm)
+        """
+        
+        try:
+            self.gui_alarm.set_data(self.monitor_mapping)
+        except Exception as e:
+            print('main: could not send data to guialarm: ',e)
+            
     ### slots to handle data transfer between threads ###
     def update_fast_data(self,data):
         if self.verbose:
@@ -648,14 +680,14 @@ class MainWindow(QtWidgets.QMainWindow):
     #def reset_volume_offset(self):
         #self.fastloop.
 
-
+    
     def update_slow_data(self,data):
         if self.verbose:
             print("main: received new data from slowloop!")
         self.slowdata = data
         self.update_monitors()
         #os.system('cls' if os.name == 'nt' else 'clear')
-        data.print_data()
+        #data.print_data()
 
     def slowloop_request(self):
         if self.verbose:
