@@ -100,7 +100,7 @@ class sensor(object):
         self.rezero()
         
         # no flow offset initially
-        self.flow_offset = 0.0
+        self.dp_offset = 0.0
         
         # Initialize the class values
         self.read()
@@ -134,8 +134,12 @@ class sensor(object):
         print('p2_0 = ',self.sensor2.pressure,' mbar')
         print('p2_0 = ',self.sensor2.pressure*self.mbar2cmh20,' cmH20')
         print()
-    def set_zero_flow(self):
-        self.flow_offset = self.flow
+    def set_zero_flow(self,samples_to_average = 100):
+        dp_arr = []
+        for i in range(samples_to_average):
+            self.read()
+            dp_arr.append(self.dp)
+        self.dp_offset = np.mean(dp_arr)
         
         
     def read(self,n_samples = 1):
@@ -161,13 +165,16 @@ class sensor(object):
         self.p1 = self.sensor1.pressure * self.mbar2cmh20
         self.p2 = self.sensor2.pressure * self.mbar2cmh20
 
-        dp = self.p2 - self.p1
+        dp = (self.p2 - self.p1) - self.dp_offset
+        """
         if np.abs(dp) < self.dp_thresh:
             dp = 0.0
-        self.dp = dp
+        """
+        
+        self.dp = dp 
 
         # Calculate the flow
-        self.flow = self.dp2flow(self.dp) - self.flow_offset
+        self.flow = self.dp2flow(self.dp)
 
 
 class fakesensor(object):
@@ -218,7 +225,7 @@ class fakesensor(object):
         print(f"Reading Simulated Data from File: {self.datafile}")
 
         # no flow offset initially
-        self.flow_offset = 0.0
+        self.dp_offset = 0.0
 
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)
@@ -227,17 +234,21 @@ class fakesensor(object):
 
     #def rezero(self):
 
-    def set_zero_flow(self):
-        self.flow_offset = self.flow
+    def set_zero_flow(self,samples_to_average = 100):
+        dp_arr = []
+        for i in range(samples_to_average):
+            self.read()
+            dp_arr.append(self.dp)
+        self.dp_offset = np.mean(dp_arr)
 
     def read(self):
 
         # read the fake data from the current line
         self.p1 = self.p1_arr[self.linenum]
         self.p2 = self.p2_arr[self.linenum]
-        self.dp = self.p2 - self.p1
+        self.dp = (self.p2 - self.p1) - self.dp_offset
         # Calculate the flow
-        self.flow = self.dp2flow(self.dp) - self.flow_offset
+        self.flow = self.dp2flow(self.dp)
         # increment the line number
         self.linenum += 1
 
