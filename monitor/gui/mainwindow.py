@@ -119,6 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # rezero the volume offset
         self.update_vol_offset.connect(self.fast_loop.update_vol_offset)
+        self.update_vol_offset.connect(self.fast_loop.update_flow_trend)
 
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
@@ -367,7 +368,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
-        self.t_update = self.fast_update_time #update time of timer in ms
+        self.t_update = self.fast_update_time*10 #update time of timer in ms
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)
