@@ -20,6 +20,8 @@ import numpy as np
 import sys
 import os
 
+
+
 #load the sensor board modules:
 try:
     import board
@@ -178,7 +180,7 @@ class fakesensor(object):
         #datafile = '/calibration/1590534414_sensor_raw.txt'
         self.datafile = main_path + datafile
         self.verbose = verbose
-        self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 1,unpack = True)
+        self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 100,unpack = True)
 
         self.linenum = 0
 

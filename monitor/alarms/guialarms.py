@@ -184,7 +184,7 @@ class GuiAlarms:
         Arguments:
         - data: dict values, keyed by observable name.
         """
-        print(f'GUI ALARM: there are [{len(self._alarmed_monitors)}] alarmed monitors: ',self._alarmed_monitors)
+        #print(f'GUI ALARM: there are [{len(self._alarmed_monitors)}] alarmed monitors: ',self._alarmed_monitors)
         # sound audio alarm if there are any alarmed monitors
         
         if self._armed:

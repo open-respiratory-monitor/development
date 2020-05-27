@@ -54,6 +54,10 @@ sys.path.insert(1, main_path)
 from sensor import sensor
 from utils import utils
 
+
+def beep():
+    os.system('afplay /System/Library/Sounds/Sosumi.aiff')
+
 """
 # Define the fast and slow data objects that will be passed to the GUI thread
 """
@@ -73,7 +77,7 @@ class fast_data(object):
         self.vol_raw = np.array([])
         self.vol_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
         self.vol = np.array([])
-
+        self.conc = np.array([])
         # time
         self.t_obj = np.array([]) # datetime object
         self.dt = np.array([])    # dt since first sample in vector
@@ -228,10 +232,13 @@ class fast_loop(QtCore.QThread):
         self.sensor.read()
         self.sensor.read()
         self.vol_integral_to_now = 0.0
-        self.vol_offset = self.sensor.dp2flow(self.sensor.dp)/(self.fastdata.fs*60.0)
+        self.vol_offset = 0.0#self.sensor.dp2flow(self.sensor.dp)/(self.fastdata.fs*60.0)
         print('##### INITIAL VOLUME OFFSET = ',self.vol_offset)
         self.flow_drift_poly = None
         self.vol_drift_poly = None
+        self.vol_concavity = None
+        self.time_last_breath = 0
+        
         
     def update_vol_offset(self):
         self.vol_offset = np.min(self.fastdata.vol)
@@ -242,9 +249,9 @@ class fast_loop(QtCore.QThread):
         self.flow_drift_poly = np.polyfit(self.fastdata.t[np.abs(self.fastdata.flow_raw) < flow_threshold], self.fastdata.flow_raw[np.abs(self.fastdata.flow_raw) < flow_threshold],1)
         print(f'\nfastloop: Updated flow trend equation: F = {self.flow_drift_poly[0]}*t + {self.flow_drift_poly[1]} \n')
     
-    def update_vol_trend(self):
+    def update_vol_trend(self,time):
         max_slope = 0.01
-        
+        """
         # fit a line through the volume
         # we will remove this line and then add the offset (the minimum of the volume)
         self.vol_drift_poly = np.polyfit(self.fastdata.t, self.fastdata.vol_raw,1)
@@ -255,6 +262,17 @@ class fast_loop(QtCore.QThread):
         self.vol_offset = np.min(self.fastdata.vol_raw - np.polyval(self.vol_drift_poly, self.fastdata.t))
         #print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
         #print(f'fastloop: volume offset = {self.vol_offset}\n\n')
+        """
+        self.restart_integral(time)
+    def restart_integral(self,time):
+        
+        
+        
+        integral_since_restart = np.sum(self.fastdata.vol_raw[self.fastdata.t > time])/(self.fastdata.fs*60.0)
+        print('restarting the integral at time: ',time, ', sum since restart = : ',integral_since_restart)
+        
+        self.vol_integral_to_now = integral_since_restart
+    
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
@@ -314,12 +332,31 @@ class fast_loop(QtCore.QThread):
             self.fastdata.flow = np.copy(self.fastdata.flow_raw)
         """
         self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
+        N = 50
+        if len(self.fastdata.flow)> N:
+            self.fastdata.conc = self.add_new_point(self.fastdata.conc,np.mean(self.fastdata.flow[-N:-1]-self.fastdata.flow[-N+1:]),self.num_samples_to_hold)
+        else:
+            self.fastdata.conc = self.add_new_point(self.fastdata.conc,0,self.num_samples_to_hold)
+        
+        
+        if (self.fastdata.conc[-1] < -0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
+            self.vol_integral_to_now = 0.0
+            self.time_last_breath = self.fastdata.t[-1]
+            #beep()
+            print("\n\n\n#### NEW INHALE ####\n\n\n")
+        else:
+            self.vol_integral_to_now = self.fastdata.vol_raw[-1]
+        #    self.vol_concavity = np.mean(np.gradient(np.gradient(self.fastdata.vol_raw[-10:])))
+        # 
+        #    if self.vol_concavity > 0:
+        #        #beep()
+        
         
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
         #self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, (np.sum(self.fastdata.flow) + self.vol_integral_to_now)/(self.fastdata.fs*60.0),self.num_samples_to_hold)
         #self.fastdata.vol_raw = integrate.cumtrapz(self.fastdata.flow, initial = self.vol_integral_to_now)/(self.fastdata.fs*60.0)
         #self.fastdata.vol_raw = signal.detrend(self.fastdata.vol_raw)
-        self.vol_integral_to_now = self.fastdata.vol_raw[-1]
+        
 
         #dp_zero = np.mean(self.fastdata.dp[np.abs(self.fastdata.dp)<0.0])
         #if np.isnan(dp_zero):
@@ -359,7 +396,9 @@ class fast_loop(QtCore.QThread):
                 self.fastdata.vol_drift = np.polyval(self.vol_drift_poly,self.fastdata.t)
             
             self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.vol_drift - self.vol_offset
-
+            
+            
+        
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
 
@@ -430,7 +469,10 @@ class slow_loop(QtCore.QThread):
 
     # this signal sends a request to the mainloop to get the current data from the fastloop
     request_fastdata = QtCore.pyqtSignal()
-
+    
+    #breath detected signal
+    breath_detected = QtCore.pyqtSignal(float) #returns the time the breath was detected
+    
     def __init__(self, main_path, config, verbose = False):
         QtCore.QThread.__init__(self)
 
@@ -461,7 +503,7 @@ class slow_loop(QtCore.QThread):
         # note the time the loop is executed
         self.t_obj = datetime.utcnow()
         self.t = self.t_obj.timestamp()
-
+        self.dt_last_prev = 100000000.0
         # time between samples
         self.ts = self.config['slowdata_interval'] #ms
 
@@ -513,7 +555,7 @@ class slow_loop(QtCore.QThread):
         """
 
 
-
+        
 
         self.index +=1
         if self.verbose:
@@ -523,7 +565,7 @@ class slow_loop(QtCore.QThread):
         self.request_fastdata.emit()
         # only do all this effort if there's actually data received from the fastloop:
         if len(self.fastdata.p1 > 0):
-
+            
             # note the time the loop is executed
             self.t_obj = datetime.utcnow()
             self.t = self.t_obj.timestamp()
@@ -622,7 +664,12 @@ class slow_loop(QtCore.QThread):
 
             # update the time of the last breath
             self.slowdata.t_last = self.tee
-
+            
+            #if dt since the last breath has gone down since the last check, signal a new breath
+            if self.slowdata.dt_last < self.dt_last_prev:
+                self.breath_detected.emit(self.slowdata.t_last)
+            else:
+                self.dt_last_prev = self.slowdata.t_last
             # index range of the last breath
             index_range = np.arange(self.i_min_vol[-2],self.i_min_vol[-1]+1)
 

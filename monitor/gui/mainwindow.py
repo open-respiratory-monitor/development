@@ -52,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # this is a signal that sends fastdata from the mainloop to the slowloop
     request_from_slowloop = QtCore.pyqtSignal(object)
     request_to_update_cal = QtCore.pyqtSignal(object)
-    update_vol_offset = QtCore.pyqtSignal()
+    update_vol_offset = QtCore.pyqtSignal(float)
 
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
@@ -120,7 +120,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # rezero the volume offset
         #self.update_vol_offset.connect(self.fast_loop.update_vol_offset)
         #self.update_vol_offset.connect(self.fast_loop.update_flow_trend)
-        self.update_vol_offset.connect(self.fast_loop.update_vol_trend)
+        #self.update_vol_offset.connect(self.fast_loop.update_vol_trend)
+        #self.update_vol_offset.connect(self.fast_loop.restart_integral)
+
+        # if new breath detected tell fastloop to reset the integral
+        #self.slow_loop.breath_detected.connect(self.fast_loop.restart_integral)
+
 
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
@@ -364,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.dp, pen = pink)
             self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = green)
 
-
+            
 
 
         # update the graphs at regular intervals (so it runs in a separate thread!!)
@@ -595,7 +600,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.diagnostic:
             self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
             #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
-            self.data_line2.setData(self.fastdata.dt,   self.fastdata.flow)
+            self.data_line2.setData(self.fastdata.dt,   self.fastdata.conc)#flow)
             self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
 
 
@@ -607,7 +612,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.data_filler._looping_restart:
                 if True:
                     print('main: restarting loop on plots')
-                self.update_vol_offset.emit()
+                self.update_vol_offset.emit(self.slowdata.t_last)
                 
     def update_monitors(self):
         """

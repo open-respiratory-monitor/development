@@ -81,7 +81,14 @@ class DataFiller():
         self._looping_lines = {}
         self._x_label = None
         self._looping_restart = False
+    
+    def recalc_x(self,sample_interval):
+        # recalculate the x vector based on actual dt between samples
+        self._sampling = sample_interval #ms
+        self._time_window = self._n_samples * self._sampling/1000  # seconds
+        self._xdata = np.linspace(0,self._time_window,  self._n_samples)
 
+    
     def connect_plot(self, plotname, plot):
         '''
         Connects a plot to this class by
