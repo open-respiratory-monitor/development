@@ -247,8 +247,8 @@ class fast_loop(QtCore.QThread):
         # we will remove this line and then add the offset (the minimum of the volume)
         self.vol_drift_poly = np.polyfit(self.fastdata.t, self.fastdata.vol_raw,0)
         self.vol_offset = np.min(self.fastdata.vol_raw - np.polyval(self.vol_drift_poly, self.fastdata.t))
-        print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
-        print(f'fastloop: volume offset = {self.vol_offset}\n\n')
+        #print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
+        #print(f'fastloop: volume offset = {self.vol_offset}\n\n')
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
