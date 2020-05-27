@@ -228,12 +228,13 @@ class fast_loop(QtCore.QThread):
         self.sensor.read()
         self.sensor.read()
         self.vol_integral_to_now = 0.0
-        self.vol_offset = self.sensor.dp2flow(self.sensor.dp)/(self.fastdata.fs*60.0)*1000
+        self.vol_offset = self.sensor.dp2flow(self.sensor.dp)/(self.fastdata.fs*60.0)
         print('##### INITIAL VOLUME OFFSET = ',self.vol_offset)
         self.flow_drift_poly = None
+        self.vol_drift_poly = None
         
     def update_vol_offset(self):
-        self.vol_offset = np.min(self.fastdata.vol*1000)
+        self.vol_offset = np.min(self.fastdata.vol)
         print('\n\n######## NEW VOLUME OFFSET = ',self.vol_offset,'\n\n')
         
     def update_flow_trend(self):
@@ -241,6 +242,13 @@ class fast_loop(QtCore.QThread):
         self.flow_drift_poly = np.polyfit(self.fastdata.t[np.abs(self.fastdata.flow_raw) < flow_threshold], self.fastdata.flow_raw[np.abs(self.fastdata.flow_raw) < flow_threshold],1)
         print(f'\nfastloop: Updated flow trend equation: F = {self.flow_drift_poly[0]}*t + {self.flow_drift_poly[1]} \n')
     
+    def update_vol_trend(self):
+        # fit a line through the volume
+        # we will remove this line and then add the offset (the minimum of the volume)
+        self.vol_drift_poly = np.polyfit(self.fastdata.t, self.fastdata.vol_raw,1)
+        self.vol_offset = np.min(self.fastdata.vol_raw - np.polyval(self.vol_drift_poly, self.fastdata.t))
+        print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
+        print(f'fastloop: volume offset = {self.vol_offset}\n\n')
     def add_new_point(self,arr,new_point,maxlen):
         # adds a new data point to the array,
         # and keeps gets rid of the oldest point
@@ -287,15 +295,18 @@ class fast_loop(QtCore.QThread):
         self.fastdata.dp   =    self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
         newflow = self.sensor.dp2flow(self.sensor.dp)
         
-        self.fastdata.flow_raw =    self.add_new_point(self.fastdata.flow_raw, newflow, self.num_samples_to_hold)
+        self.fastdata.flow =    self.add_new_point(self.fastdata.flow_raw, newflow, self.num_samples_to_hold)
+        
+        #self.fastdata.flow_raw =    self.add_new_point(self.fastdata.flow_raw, newflow, self.num_samples_to_hold)
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
         
+        """
         # apply the linear fit to the stored flow data
         if not(self.flow_drift_poly is None):
             self.fastdata.flow = self.fastdata.flow_raw - np.polyval(self.flow_drift_poly,self.fastdata.t)
         else:
             self.fastdata.flow = np.copy(self.fastdata.flow_raw)
-        
+        """
         self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
         
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')
@@ -336,10 +347,12 @@ class fast_loop(QtCore.QThread):
                 self.fastdata.vol_drift = 0.0*self.fastdata.vol_raw
 
         else:
-
-            self.fastdata.vol_drift = 0.0*self.fastdata.vol_raw
-
-            self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.vol_drift
+            if self.vol_drift_poly is None:
+                self.fastdata.vol_drift = 0.0*np.copy(self.fastdata.vol_raw)
+            else:
+                self.fastdata.vol_drift = np.polyval(self.vol_drift_poly,self.fastdata.t)
+            
+            self.fastdata.vol = self.fastdata.vol_raw - self.fastdata.vol_drift - self.vol_offset
 
         # tell the newdata signal to emit every time we update the data
         self.newdata.emit(self.fastdata)
@@ -347,7 +360,8 @@ class fast_loop(QtCore.QThread):
         # send data to the datafiller
         self.fastdata.all_fields.update({'pressure' : self.fastdata.p1[-1]})
         self.fastdata.all_fields.update({'flow' : self.fastdata.flow[-1]})
-        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000 - self.vol_offset}) # in mL
+        #self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000 - self.vol_offset}) # in mL
+        self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000}) # in mL
 
 
 

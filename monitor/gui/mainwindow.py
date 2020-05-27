@@ -118,8 +118,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
 
         # rezero the volume offset
-        self.update_vol_offset.connect(self.fast_loop.update_vol_offset)
-        self.update_vol_offset.connect(self.fast_loop.update_flow_trend)
+        #self.update_vol_offset.connect(self.fast_loop.update_vol_offset)
+        #self.update_vol_offset.connect(self.fast_loop.update_flow_trend)
+        self.update_vol_offset.connect(self.fast_loop.update_vol_trend)
 
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
