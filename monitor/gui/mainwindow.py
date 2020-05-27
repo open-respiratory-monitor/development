@@ -369,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the graphs at regular intervals (so it runs in a separate thread!!)
         # Stuff with the timer
-        self.t_update = self.fast_update_time*5 #update time of timer in ms
+        self.t_update = self.config['plot_interval']#self.fast_update_time*5 #update time of timer in ms
         self.timer = QtCore.QTimer()
         self.timer.setInterval(self.t_update)
         self.timer.timeout.connect(self.update_plots)

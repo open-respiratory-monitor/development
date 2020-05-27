@@ -68,12 +68,12 @@ class DataFiller():
         self._colors = {}
         self._config = config
         self._display_time = self._config['display_time']
-        self._sampling = self._config['fastdata_interval']
+        self._sampling = self._config['plot_interval']
         self._n_samples = self._config['nsamples'] #int(self._display_time*1000/self._sampling )
         self._n_historic_samples = 2*self._n_samples
 
-        self._time_window = self._n_samples * self._sampling  # seconds
-        self._xdata = np.linspace(-self._time_window, 0, self._n_samples)
+        self._time_window = self._n_samples * self._sampling/1000  # seconds
+        self._xdata = np.linspace(0,self._time_window,  self._n_samples)
         self._frozen = False
         self._first_plot = None
         self._looping = self._config['use_looping_plots']
@@ -116,11 +116,12 @@ class DataFiller():
         plot.setLabel(axis='left', text=y_axis_label)
 
         # Set the X axis
-        if self._config['show_x_axis_labels'] and 'bot' in plotname and not self._looping:
+        if self._config['show_x_axis_labels'] and 'bot' in plotname:# and not self._looping:
             self.add_x_axis_label(plot)
-
+            
         # Remove x ticks, if selected
-        if self._looping or not self._config['show_x_axis_ticks']:
+        if not self._config['show_x_axis_ticks']:
+        #if self._looping or not self._config['show_x_axis_ticks']:
             plot.getAxis('bottom').setTicks([])
             plot.getAxis('bottom').setStyle(tickTextOffset=0, tickTextHeight=0)
 
@@ -263,7 +264,7 @@ class DataFiller():
         arguments:
         - name: the plot name to set the x range
         '''
-        self._qtgraphs[name].setXRange(-self._time_window, 0)
+        self._qtgraphs[name].setXRange(0,self._time_window)
 
     def add_x_axis_label(self, plot):
         #pylint: disable=invalid-name
@@ -402,8 +403,7 @@ class DataFiller():
             self.set_y_range(name)
 
             if self._looping:
-                x_val = self._xdata[self._looping_data_idx[name]
-                                    ] - self._sampling * 0.1
+                x_val = self._xdata[self._looping_data_idx[name]] #- self._sampling 0.1
                 self._looping_lines[name].setValue(x_val)
 
     def freeze(self):

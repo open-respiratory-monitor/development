@@ -44,6 +44,9 @@ display_time: 11
 # time in ms between two data retrieval
 fastdata_interval: 10
 
+#plot update interval
+plot_interval: 50
+
 # time in seconds between two status checks
 slowdata_interval: 1000
 
@@ -60,6 +63,8 @@ nsamples: 100
 # 200)
 #historic_nsamples: 200
 # The parameters that can be
+
+
 
 
 # This is the string returned by the ESP in case of success
