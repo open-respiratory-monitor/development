@@ -317,9 +317,9 @@ class fast_loop(QtCore.QThread):
         self.fastdata.p1   =    self.add_new_point(self.fastdata.p1,   self.sensor.p1,   self.num_samples_to_hold)
         self.fastdata.p2   =    self.add_new_point(self.fastdata.p2,   self.sensor.p2,   self.num_samples_to_hold)
         self.fastdata.dp   =    self.add_new_point(self.fastdata.dp,   self.sensor.dp,   self.num_samples_to_hold)
-        newflow = self.sensor.dp2flow(self.sensor.dp)
+        #newflow = self.sensor.dp2flow(self.sensor.dp)
         
-        self.fastdata.flow =    self.add_new_point(self.fastdata.flow, newflow, self.num_samples_to_hold)
+        self.fastdata.flow =    self.add_new_point(self.fastdata.flow, self.sensor.flow, self.num_samples_to_hold)
         
         #self.fastdata.flow_raw =    self.add_new_point(self.fastdata.flow_raw, newflow, self.num_samples_to_hold)
         #self.fastdata.flow = signal.detrend(self.fastdata.flow,type = 'constant')

@@ -225,7 +225,9 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QPushButton, "button_downalarm")
         self.button_offalarm = self.alarmsbar.findChild(
             QtWidgets.QPushButton, "button_offalarm")
-
+        
+        self.button_zero_flow = self.settingsfork.findChild(
+            QtWidgets.QPushButton, "button_zero_flow")
 
         '''
         Frozen Plot menu
@@ -298,7 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.alarms_settings.move_selected_down)
         self.button_backalarms.pressed.connect(self.exit_alarms)
 
-
+        self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
         '''
         Start the alarm handler, which will check for ESP alarms
         '''
@@ -691,7 +693,9 @@ class MainWindow(QtWidgets.QMainWindow):
     #def reset_volume_offset(self):
         #self.fastloop.
 
-    
+    def zero_sensor_flow(self):
+        self.fast_loop.sensor.set_zero_flow()
+
     def update_slow_data(self,data):
         if self.verbose:
             print("main: received new data from slowloop!")

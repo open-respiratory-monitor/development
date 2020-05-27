@@ -45,6 +45,7 @@ class sensor(object):
         p1 = pressure @ sensor 1 in cmH20
         p2 = pressure @ sensor 2 in cmH20
         dp = differential pressure (p2 - p1) in cmH20
+        flow = flow in slpm
     """
 
     def __init__(self,main_path, mouthpiece = 'hamilton',dp_thresh = 0.0,verbose = False):
@@ -94,10 +95,13 @@ class sensor(object):
             print(f"trying to load calfile at {self.calfile}")
         self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
 
-
+        
         # Zero the sensors
         self.rezero()
-
+        
+        # no flow offset initially
+        self.flow_offset = 0.0
+        
         # Initialize the class values
         self.read()
     def dp2flow(self,dp_cmh20):
@@ -130,7 +134,10 @@ class sensor(object):
         print('p2_0 = ',self.sensor2.pressure,' mbar')
         print('p2_0 = ',self.sensor2.pressure*self.mbar2cmh20,' cmH20')
         print()
-
+    def set_zero_flow(self):
+        self.flow_offset = self.flow
+        
+        
     def read(self,n_samples = 1):
         """
         p1 = []
@@ -160,7 +167,7 @@ class sensor(object):
         self.dp = dp
 
         # Calculate the flow
-        #self.flow = self.dp2flow(self.dp)
+        self.flow = self.dp2flow(self.dp) - self.flow_offset
 
 
 class fakesensor(object):
@@ -210,6 +217,9 @@ class fakesensor(object):
         #print statement
         print(f"Reading Simulated Data from File: {self.datafile}")
 
+        # no flow offset initially
+        self.flow_offset = 0.0
+
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
@@ -217,6 +227,8 @@ class fakesensor(object):
 
     #def rezero(self):
 
+    def set_zero_flow(self):
+        self.flow_offset = self.flow
 
     def read(self):
 
@@ -224,7 +236,8 @@ class fakesensor(object):
         self.p1 = self.p1_arr[self.linenum]
         self.p2 = self.p2_arr[self.linenum]
         self.dp = self.p2 - self.p1
-
+        # Calculate the flow
+        self.flow = self.dp2flow(self.dp) - self.flow_offset
         # increment the line number
         self.linenum += 1
 
