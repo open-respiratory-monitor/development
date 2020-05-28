@@ -189,12 +189,13 @@ class GuiAlarms:
         
         if self._armed:
             self.sound_alarms()
-        for observable in data:
-            item = self._get_by_observable(observable)
-            if item is not None:
-                self._test_thresholds(item, data[observable])
+            for observable in data:
+                item = self._get_by_observable(observable)
+                if item is not None:
+                    self._test_thresholds(item, data[observable])
         
-
+        else:
+            pass
     
     def sound_alarms(self):
         try:
@@ -320,6 +321,27 @@ class GuiAlarms:
         disarm the gui alarm handler
         """
         self._armed = False
-
+        
+        
+        
+        
+        for monitor in self._monitors.values():
+            #print('clearing observable: ',monitor['name'])
+            
+            monitor.set_alarm_state(isalarm=False)
+            
+        self._alarmed_monitors = set() 
+        
+        
+        """
+        # need to make a copy otherwise the loop size changes as it removes them
+        
+        # clear any running alarms:
+        for name in alarmed_monitors:
+            self._alarmed_monitors.remove(name)
+            if len(self._alarmed_monitors) == 0:
+                #self._esp32.snooze_gui_alarm()
+                pass
+        """
 if __name__ == '__main__':
     audio_alarm = audio.audio_alarm(filepath = main_path + '/audio/')

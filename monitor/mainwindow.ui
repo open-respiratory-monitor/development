@@ -1118,6 +1118,9 @@ Settings</string>
            <string>Arm
 Alarms</string>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item row="0" column="2">

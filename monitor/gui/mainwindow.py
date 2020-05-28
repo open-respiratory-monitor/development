@@ -301,6 +301,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_backalarms.pressed.connect(self.exit_alarms)
 
         self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
+        
+        ''' 
+        arming the alarms
+        '''
+        self.button_arm.pressed.connect(self.arm_disarm_alarms)
+        
+        
         '''
         Start the alarm handler, which will check for ESP alarms
         '''
@@ -595,6 +602,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_settingsfork()
 
     ### gui-related functions
+    def arm_disarm_alarms(self):
+        if self.button_arm.isChecked():
+            self.gui_alarm.arm_alarms()
+        elif not self.button_arm.isChecked():
+            self.gui_alarm.disarm_alarms()
+    
+    
+    
+    
+    
     def update_plots(self):
 
 
