@@ -371,6 +371,8 @@ class fast_loop(QtCore.QThread):
         if (self.fastdata.dflow[-1] < -0.5):
             self.insp = False
             self.exp = True
+            
+            
         
         #    self.vol_concavity = np.mean(np.gradient(np.gradient(self.fastdata.vol_raw[-10:])))
         # 
