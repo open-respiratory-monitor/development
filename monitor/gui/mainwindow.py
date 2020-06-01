@@ -125,7 +125,6 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.update_vol_offset.connect(self.fast_loop.restart_integral)
 
         # if new breath detected tell fastloop to reset the integral
-        #self.slow_loop.breath_detected.connect(self.fast_loop.restart_integral)
         self.restart_looping_plot.connect(self.fast_loop.update_vol_trend)
 
         # want to just show the plots to dewbug the calculations?
@@ -333,11 +332,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         ### Stuff from the original just plots gui ###
         if self.diagnostic:
+            self.graph0 = pg.PlotWidget()
             self.graph1 = pg.PlotWidget()
             self.graph2 = pg.PlotWidget()
             self.graph3 = pg.PlotWidget()
 
             layout = QtWidgets.QVBoxLayout()
+            layout.addWidget(self.graph0)
             layout.addWidget(self.graph1)
             layout.addWidget(self.graph2)
             layout.addWidget(self.graph3)
@@ -349,6 +350,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setCentralWidget(widget)
 
             # set the plot properties
+            self.graph0.setBackground('k')
+            self.graph0.showGrid(x = True, y = True)
             self.graph1.setBackground('k')
             self.graph1.showGrid(x = True, y = True)
             self.graph2.setBackground('k')
@@ -358,8 +361,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
             # Set the label properties with valid CSS commands -- https://groups.google.com/forum/#!topic/pyqtgraph/jS1Ju8R6PXk
             labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-            self.graph1.setLabel('left','P','cmH20',**labelStyle)
-            self.graph2.setLabel('left','Flow','L/m',**labelStyle)
+            self.graph0.setLabel('left','P','cmH20',**labelStyle)
+            self.graph1.setLabel('left','Flow ','L/m',**labelStyle)
+            self.graph2.setLabel('left','Flow Slope','L/m/s',**labelStyle)
             self.graph3.setLabel('left','V','mL',**labelStyle)
             self.graph3.setLabel('bottom', 'Time', 's', **labelStyle)
 
@@ -371,12 +375,14 @@ class MainWindow(QtWidgets.QMainWindow):
             # make a QPen object to hold the marker properties
             yellow = pg.mkPen(color = 'y',width = 2)
             pink = pg.mkPen(color = 'm', width = 2)
+            blue = pg.mkPen(color = 'b',width = 2)
             green = pg.mkPen(color = 'g', width = 2)
 
             # define the curves to plot
-            self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.p1,       pen = yellow)
+            self.data_line0 = self.graph0.plot(self.fastdata.dt,    self.fastdata.p1,       pen = yellow)
+            self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.flow,       pen = blue)
             #self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
-            self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.dp, pen = pink)
+            self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.conc, pen = pink)
             self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = green)
 
             
@@ -618,8 +624,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the plots with the new data
         if self.diagnostic:
-            self.data_line1.setData(self.fastdata.dt,   self.fastdata.p1)
+            self.data_line0.setData(self.fastdata.dt,   self.fastdata.p1)
             #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
+            self.data_line1.setData(self.fastdata.dt, self.fastdata.flow)
             self.data_line2.setData(self.fastdata.dt,   self.fastdata.conc)#flow)
             self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
 
@@ -644,7 +651,7 @@ class MainWindow(QtWidgets.QMainWindow):
         - tidal_volume
         - respiratory_rate
         - i_to_e_ratio
-        - cstat
+        - cstat 
         - apnea_time
         - battery_low
         - battery_charging

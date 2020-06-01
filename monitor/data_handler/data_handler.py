@@ -331,7 +331,8 @@ class fast_loop(QtCore.QThread):
         else:
             self.fastdata.flow = np.copy(self.fastdata.flow_raw)
         """
-        self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
+        
+        # build up a vector of the flow slope (ie the volume concavity)
         N = 50
         if len(self.fastdata.flow)> N:
             self.fastdata.conc = self.add_new_point(self.fastdata.conc,np.mean(self.fastdata.flow[-N:-1]-self.fastdata.flow[-N+1:]),self.num_samples_to_hold)
@@ -339,6 +340,13 @@ class fast_loop(QtCore.QThread):
             self.fastdata.conc = self.add_new_point(self.fastdata.conc,0,self.num_samples_to_hold)
         
         
+        # if the flow slope is below a theshold, then we'll call it zero, and add zero to the volume
+        if (np.abs(self.fastdata.conc[-1]) < 0.1) & (np.abs(self.fastdata.flow[-1]) < 5.0):
+            self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, 0.0, self.num_samples_to_hold)
+        else:
+            self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
+        
+        # trigger a new breath if the slope flow is above a threshold
         if (self.fastdata.conc[-1] < -0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
