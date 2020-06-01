@@ -368,7 +368,7 @@ class fast_loop(QtCore.QThread):
         else:
             self.vol_integral_to_now = self.fastdata.vol_raw[-1]
         
-        if (self.fastdata.dflow[-1] < -0.5) & (self.fastdata.flow[-1] < 10.0):
+        if (self.fastdata.dflow[-1] < -0.5) & (self.fastdata.flow[-1] < -10.0):
             self.insp = False
             
         self.fastdata.insp = self.add_new_point(self.fastdata.insp, self.insp, self.num_samples_to_hold)    
