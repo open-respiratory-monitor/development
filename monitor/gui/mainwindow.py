@@ -53,6 +53,7 @@ class MainWindow(QtWidgets.QMainWindow):
     request_from_slowloop = QtCore.pyqtSignal(object)
     request_to_update_cal = QtCore.pyqtSignal(object)
     update_vol_offset = QtCore.pyqtSignal(float)
+    restart_looping_plot = QtCore.pyqtSignal()
 
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
@@ -125,7 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # if new breath detected tell fastloop to reset the integral
         #self.slow_loop.breath_detected.connect(self.fast_loop.restart_integral)
-
+        self.restart_looping_plot.connect(self.fast_loop.update_vol_trend)
 
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
@@ -631,7 +632,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.data_filler._looping_restart:
                 if True:
                     print('main: restarting loop on plots')
-                self.update_vol_offset.emit(self.slowdata.t_last)
+                #self.update_vol_offset.emit(self.slowdata.t_last)
+                self.restart_looping_plot.emit()
                 
     def update_monitors(self):
         """

@@ -370,6 +370,7 @@ class DataFiller():
                 if self._looping_data_idx[name] == self._n_samples:
                     self._looping_data_idx[name] = 0
                     self._looping_restart = True
+                    
             else:
                 # Scrolling plots - shift data 1 sample left
                 self._data[name][:-1] = self._data[name][1:]

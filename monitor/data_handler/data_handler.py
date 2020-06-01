@@ -249,9 +249,9 @@ class fast_loop(QtCore.QThread):
         self.flow_drift_poly = np.polyfit(self.fastdata.t[np.abs(self.fastdata.flow_raw) < flow_threshold], self.fastdata.flow_raw[np.abs(self.fastdata.flow_raw) < flow_threshold],1)
         print(f'\nfastloop: Updated flow trend equation: F = {self.flow_drift_poly[0]}*t + {self.flow_drift_poly[1]} \n')
     
-    def update_vol_trend(self,time):
+    def update_vol_trend(self):
         max_slope = 0.01
-        """
+        
         # fit a line through the volume
         # we will remove this line and then add the offset (the minimum of the volume)
         self.vol_drift_poly = np.polyfit(self.fastdata.t, self.fastdata.vol_raw,1)
@@ -262,8 +262,8 @@ class fast_loop(QtCore.QThread):
         self.vol_offset = np.min(self.fastdata.vol_raw - np.polyval(self.vol_drift_poly, self.fastdata.t))
         #print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
         #print(f'fastloop: volume offset = {self.vol_offset}\n\n')
-        """
-        self.restart_integral(time)
+        
+        
     def restart_integral(self,time):
         
         
