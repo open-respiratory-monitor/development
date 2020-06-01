@@ -627,7 +627,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_line0.setData(self.fastdata.dt,   self.fastdata.p1)
             #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
             self.data_line1.setData(self.fastdata.dt, self.fastdata.flow)
-            self.data_line2.setData(self.fastdata.dt,   self.fastdata.d2flow)#flow)
+            self.data_line2.setData(self.fastdata.dt,   self.fastdata.dflow)#flow)
             self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
 
 

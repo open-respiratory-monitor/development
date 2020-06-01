@@ -206,7 +206,9 @@ class fast_loop(QtCore.QThread):
 
         self.correct_vol = correct_vol
 
-        
+        #define if we're inspiring or expiring
+        self.insp = False
+        self.exp = False
 
         if self.correct_vol:
             # slow down the loop so that it doesn't crash!
@@ -341,27 +343,35 @@ class fast_loop(QtCore.QThread):
         else:
             self.fastdata.dflow = self.add_new_point(self.fastdata.dflow,0,self.num_samples_to_hold)
         
+        
+        """
         # build up the flow second derivative
         if len(self.fastdata.flow)> N:
             self.fastdata.d2flow = self.add_new_point(self.fastdata.d2flow,np.mean(self.fastdata.dflow[-N+1:] - self.fastdata.dflow[-N:-1]),self.num_samples_to_hold)
         else:
             self.fastdata.d2flow = self.add_new_point(self.fastdata.d2flow,0,self.num_samples_to_hold)
-        
+        """
         
         # if the flow slope is below a theshold, then we'll call it zero, and add zero to the volume
-        if (np.abs(self.fastdata.dflow[-1]) < 0.1) & (np.abs(self.fastdata.flow[-1]) < 5.0) & (np.abs(self.fastdata.d2flow[-1] < 1.0)):
+        if (np.abs(self.fastdata.dflow[-1]) < 0.1) & (np.abs(self.fastdata.flow[-1]) < 5.0) & (self.insp == False):
             self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, 0.0, self.num_samples_to_hold)
         else:
             self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
         
         # trigger a new breath if the slope flow is above a threshold
         if (self.fastdata.dflow[-1] > 0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
+            self.insp = True           
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
             #beep()
             print("\n\n\n#### NEW INHALE ####\n\n\n")
         else:
             self.vol_integral_to_now = self.fastdata.vol_raw[-1]
+        
+        if (self.fastdata.dflow[-1] < -0.5):
+            self.insp = False
+            self.exp = True
+        
         #    self.vol_concavity = np.mean(np.gradient(np.gradient(self.fastdata.vol_raw[-10:])))
         # 
         #    if self.vol_concavity > 0:
