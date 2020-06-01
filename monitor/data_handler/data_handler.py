@@ -359,8 +359,9 @@ class fast_loop(QtCore.QThread):
             self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
         
         # trigger a new breath if the slope flow is above a threshold
-        if (self.fastdata.dflow[-1] > 0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
-            self.insp = True           
+        if (self.fastdata.dflow[-1] > 0.5) & (self.fastdata.flow[-1] > 10.0) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
+            self.insp = True   
+            self.exp = False
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
             #beep()
@@ -368,7 +369,7 @@ class fast_loop(QtCore.QThread):
         else:
             self.vol_integral_to_now = self.fastdata.vol_raw[-1]
         
-        if (self.fastdata.dflow[-1] < -0.5):
+        if (self.fastdata.dflow[-1] < -0.5) & (self.fastdata.flow[-1] < 10.0):
             self.insp = False
             self.exp = True
             
