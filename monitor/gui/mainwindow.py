@@ -640,7 +640,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if True:
                     print('main: restarting loop on plots')
                 #self.update_vol_offset.emit(self.slowdata.t_last)
-                self.restart_looping_plot.emit()
+                #self.restart_looping_plot.emit()
                 
     def update_monitors(self):
         """
