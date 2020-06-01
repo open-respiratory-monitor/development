@@ -361,7 +361,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             # Set the label properties with valid CSS commands -- https://groups.google.com/forum/#!topic/pyqtgraph/jS1Ju8R6PXk
             labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-            self.graph0.setLabel('left','P','cmH20',**labelStyle)
+            self.graph0.setLabel('left','Inspiring','cmH20',**labelStyle)
             self.graph1.setLabel('left','Flow ','L/m',**labelStyle)
             self.graph2.setLabel('left','Flow Slope','L/m/s',**labelStyle)
             self.graph3.setLabel('left','V','mL',**labelStyle)
@@ -624,7 +624,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the plots with the new data
         if self.diagnostic:
-            self.data_line0.setData(self.fastdata.dt,   self.fastdata.p1)
+            self.data_line0.setData(self.fastdata.dt,   self.fastdata.insp)
             #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
             self.data_line1.setData(self.fastdata.dt, self.fastdata.flow)
             self.data_line2.setData(self.fastdata.dt,   self.fastdata.dflow)#flow)

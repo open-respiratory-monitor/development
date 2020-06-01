@@ -73,7 +73,7 @@ class fast_data(object):
         self.flow = np.array([])
         self.flow_raw = np.array([])
         self.dflow = np.array([])
-        self.d2flow = np.array([])
+        self.insp = np.array([])
         
         # volume
         self.vol_raw = np.array([])
@@ -361,7 +361,6 @@ class fast_loop(QtCore.QThread):
         # trigger a new breath if the slope flow is above a threshold
         if (self.fastdata.dflow[-1] > 0.5) & (self.fastdata.flow[-1] > 10.0) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
             self.insp = True   
-            self.exp = False
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
             #beep()
@@ -371,9 +370,8 @@ class fast_loop(QtCore.QThread):
         
         if (self.fastdata.dflow[-1] < -0.5) & (self.fastdata.flow[-1] < 10.0):
             self.insp = False
-            self.exp = True
             
-            
+        self.fastdata.insp = self.add_new_point(self.fastdata.insp, self.insp, self.num_samples_to_hold)    
         
         #    self.vol_concavity = np.mean(np.gradient(np.gradient(self.fastdata.vol_raw[-10:])))
         # 
