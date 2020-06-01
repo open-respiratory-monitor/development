@@ -645,6 +645,26 @@
         <property name="spacing">
          <number>0</number>
         </property>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="button_tools">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Tools</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="3">
          <widget class="QPushButton" name="button_alarms">
           <property name="sizePolicy">
@@ -1150,27 +1170,6 @@ Plots</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="6">
-         <widget class="QPushButton" name="button_lockscreen">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>16</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>LOCK
-Screen</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <widget class="QPushButton" name="button_silence">
           <property name="sizePolicy">
@@ -1189,26 +1188,6 @@ Screen</string>
           <property name="text">
            <string>Silence
 Alarms</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QPushButton" name="button_zero_flow">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>15</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Rezero Flow</string>
           </property>
          </widget>
         </item>

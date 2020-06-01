@@ -265,7 +265,6 @@ displayed_monitors:
     - tidal_volume
     - respiratory_rate
     - i_to_e_ratio
-    - cstat
     - apnea_time
     - battery_low
     - battery_charging
@@ -279,8 +278,18 @@ alarms:
 #    - setmax: Alarm if value above this  (if None - no upper bound)
 #    - linked_monitor: Name of the monitor connected to this observable
 #    - observable: Name of this observable
-    
-
+    apnea:
+        min: 0
+        setmin: 0
+        max: 20
+        setmax: 10
+        under_threshold_code: 22822
+        over_threshold_code:  45644
+        observable: apnea_time
+        linked_monitor: apnea_time
+        priority: "high"
+        
+        
     peak:
         min: 4
         setmin: 4

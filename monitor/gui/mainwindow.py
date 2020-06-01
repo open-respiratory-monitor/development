@@ -125,7 +125,10 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.update_vol_offset.connect(self.fast_loop.restart_integral)
 
         # if new breath detected tell fastloop to reset the integral
-        self.restart_looping_plot.connect(self.fast_loop.update_vol_trend)
+        #self.restart_looping_plot.connect(self.fast_loop.update_vol_trend)
+
+        #if the fastloop detects a new exhalation, try to calculate the breath params
+        self.fast_loop.new_exhale.connect(self.slow_loop.calculate_breath_params)
 
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
@@ -206,13 +209,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settingsfork = self.findChild(
             QtWidgets.QWidget, "settingsforkbar")
         self.button_alarms = self.settingsfork.findChild(
-            QtWidgets.QWidget,"button_alarms")
+            QtWidgets.QPushButton,"button_alarms")
         self.button_arm = self.settingsfork.findChild(
-            QtWidgets.QWidget,"button_arm")
+            QtWidgets.QPushButton,"button_arm")
+        
+        self.button_silence = self.settingsfork.findChild(
+            QtWidgets.QPushButton,"button_silence")
+        
         self.button_freeze = self.settingsfork.findChild(
-            QtWidgets.QWidget,"button_freeze")
+            QtWidgets.QPushButton,"button_freeze")
 
-
+        self.button_tools = self.settingsfork.findChild(
+            QtWidgets.QPushButton,"button_tools")
         self.button_backalarms = self.alarmsbar.findChild(
             QtWidgets.QPushButton, "button_backalarms")
         self.button_applyalarm = self.alarmsbar.findChild(
@@ -226,8 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_offalarm = self.alarmsbar.findChild(
             QtWidgets.QPushButton, "button_offalarm")
         
-        self.button_zero_flow = self.settingsfork.findChild(
-            QtWidgets.QPushButton, "button_zero_flow")
+        
 
         '''
         Frozen Plot menu
@@ -279,13 +286,35 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_downalarm.pressed.connect(
             self.alarms_settings.move_selected_down)
 
+        
 
+        
+        
+        
+        
+        '''
+        Start the alarm handler, which will check for ESP alarms
+        '''
+        self.alarm_h = AlarmHandler(self.config, self.alarmbar)
 
+        # The alarms are from the default_settings.yaml config file
+        # self.alarms = {}
+        # for name in config['alarms']:
+        #     alarm = GuiAlarm(name, config, self.monitors, self.alarm_h)
+        #     self.alarms[name] = alarm
+        self.gui_alarm = GuiAlarms(config, self.monitors)
+        
+        print('trying to connect alarms')
+        for monitor in self.monitors.values():
+            monitor.connect_gui_alarm(self.gui_alarm)
+            
+            
+            
         '''
         Connect the menu buttons to actions
         '''
         self.button_alarms.pressed.connect(self.goto_alarms)
-
+        
         self.alarms_settings.connect_monitors(self)
         self.alarms_settings.populate_monitors()
         self.button_applyalarm.pressed.connect(
@@ -300,31 +329,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self.alarms_settings.move_selected_down)
         self.button_backalarms.pressed.connect(self.exit_alarms)
 
-        self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
+        #self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
+        
+        self.button_tools.setEnabled(False)
         
         ''' 
         arming the alarms
         '''
-        self.button_arm.pressed.connect(self.arm_disarm_alarms)
-        
-        
-        '''
-        Start the alarm handler, which will check for ESP alarms
-        '''
-        self.alarm_h = AlarmHandler(self.config, self.alarmbar)
-
-        # The alarms are from the default_settings.yaml config file
-        # self.alarms = {}
-        # for name in config['alarms']:
-        #     alarm = GuiAlarm(name, config, self.monitors, self.alarm_h)
-        #     self.alarms[name] = alarm
-        self.gui_alarm = GuiAlarms(config, self.monitors)
-
-        print('trying to connect alarms')
-        for monitor in self.monitors.values():
-            monitor.connect_gui_alarm(self.gui_alarm)
-
-
+        self.button_arm.toggled.connect(self.arm_disarm_alarms)    
+        # set up the mute audio alarm buttion
+        self.button_silence.pressed.connect(self.silence_alarms)
 
         # Show the Page
         self.goto_main()
@@ -612,12 +626,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def arm_disarm_alarms(self):
         if self.button_arm.isChecked():
             self.gui_alarm.arm_alarms()
+            self.button_arm.setText('DISARM \nAlarms')
+            self.button_arm.setStyleSheet('QPushButton {color: red;}')
+            print('main: ARMED BUTTON CHECKED')
         elif not self.button_arm.isChecked():
             self.gui_alarm.disarm_alarms()
+            print('main: ARMED BUTTON UNCHECKED')
+            self.button_arm.setText('ARM \nAlarms')
+            self.button_arm.setStyleSheet('QPushButton {color: green;}')
     
-    
-    
-    
+    def silence_alarms(self):
+        self.gui_alarm.silence_alarms()
     
     def update_plots(self):
 
@@ -633,8 +652,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #
         else:
+            # add the data to the plot vectors
             for key in self.fastdata.all_fields.keys():
                 self.data_filler.add_data_point(key,self.fastdata.all_fields[key])
+            
+            # update the plots
+            #self.data_filler.update_all_plots()
+            self.data_filler.update_plot('pressure')
+            self.data_filler.update_plot('flow')
+            self.data_filler.update_plot('volume')
+            
             #check if the looping is restarting
             if self.data_filler._looping_restart:
                 if True:
@@ -689,7 +716,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if self.verbose:
                     print(f'main: adding to {key}: {value}')
                 self.data_filler.add_data_point(key,value)
-
+                self.data_filler.update_all_monitors()
             except Exception as e:
                 #print(f'main: could not update monitor {key}: ',e)
                 pass

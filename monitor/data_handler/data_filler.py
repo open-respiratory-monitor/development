@@ -377,17 +377,21 @@ class DataFiller():
 
                 # add the last data point
                 self._data[name][-1] = data_point
-
-        if name in self._plots:
+                
+    def update_all_plots(self):
+        
+        for name in self._plots:
             #print('datafiller: updating plot: ',name)
             self.update_plot(name)
-
-        if name in self._monitors:
+            
+    def update_all_monitors(self):
+        
+        for name in self._monitors:
             #print(f'data_filler: adding to monitor {name}: {data_point}')
             #print('datafiller: updating monitor: ',name)
             self.update_monitor(name)
 
-    def update_plot(self, name):
+    def update_plot(self, name, xdata_name = 'default'):
         '''
         Send new data from self._data to the actual pyqtgraph plot.
 
@@ -396,7 +400,13 @@ class DataFiller():
         '''
 
         #print("updating plot: ",name)
-
+        if xdata_name == 'default':
+            xdata = self._xdata
+            is_xy = False
+        else:
+            xdata = self._data[xdata_name]
+            is_xy = True
+        
         if not self._frozen:
             # Update the displayed plot with current data.
             # In frozen mode, we don't update the display.
@@ -404,14 +414,17 @@ class DataFiller():
             color = color.replace('rgb', '')
             color = literal_eval(color)
             self._plots[name].setData(
-                copy(self._xdata),
+                copy(xdata),
                 copy(self._data[name]),
                 pen=pg.mkPen(color, width=self._config['line_width']))
-            self.set_default_x_range(name)
+            if is_xy:
+                self._qtgraphs[name].setXRange(*self._yrange[xdata_name])
+            else:
+                self.set_default_x_range(name)
             self.set_y_range(name)
 
             if self._looping:
-                x_val = self._xdata[self._looping_data_idx[name]] #- self._sampling 0.1
+                x_val = xdata[self._looping_data_idx[name]] #- self._sampling 0.1
                 self._looping_lines[name].setValue(x_val)
 
     def freeze(self):

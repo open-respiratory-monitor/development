@@ -128,6 +128,17 @@ class slow_data(object):
         print(f'Low Battery = {self.lowbatt}')
 
 
+def add_new_point(self,arr,new_point,maxlen):
+       # adds a new data point to the array,
+       # and keeps gets rid of the oldest point
+
+       if len(arr) < maxlen:
+           arr = np.append(arr,new_point)
+       else:
+           arr[:-1] = arr[1:]
+           arr[-1] = new_point
+
+       return arr
 
 
 
@@ -148,7 +159,8 @@ class fast_loop(QtCore.QThread):
     # define a new signal that will be used to send updated data back to the main thread
     # this signal returns an object that holds the data to ship out to main
     newdata = QtCore.pyqtSignal(object)
-    
+    new_inhale = QtCore.pyqtSignal()
+    new_exhale = QtCore.pyqtSignal()
 
     def __init__(self, main_path, config, correct_vol = False, simulation = False,logdata = False,verbose = False):
 
@@ -364,12 +376,16 @@ class fast_loop(QtCore.QThread):
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
             #beep()
-            print("\n\n\n#### NEW INHALE ####\n\n\n")
+            print("\n\n\nfastloop: #### NEW INHALE ####\n\n\n")
+            self.new_inhale.emit()
+            
         else:
             self.vol_integral_to_now = self.fastdata.vol_raw[-1]
         
         if (self.fastdata.dflow[-1] < -0.25) & (self.fastdata.flow[-1] < -10.0):
             self.insp = False
+            self.new_exhale.emit()
+            print("\n\n\nfastloop: #### NEW EXHALE ####\n\n\n")
             
         self.fastdata.insp = self.add_new_point(self.fastdata.insp, self.insp, self.num_samples_to_hold)    
         
@@ -606,14 +622,15 @@ class slow_loop(QtCore.QThread):
                 #self.calculate_breath_params()
             except Exception as e:
                 print("slowloop: vol min calc error: ",e)
-
+            
+            """
             # try to calculate the breath parameters
             try:
                 self.calculate_breath_params()
 
             except Exception as e:
                 print("slowloop: error calculating breath parameters: ",e)
-
+            """
 
             # Do these whether or not a breath is detected!
             # how long ago was the last breath started?
@@ -624,10 +641,10 @@ class slow_loop(QtCore.QThread):
             scale = 60.0/self.fastdata.dt[-1]
             flow_in = self.fastdata.flow[self.fastdata.flow > 0]
             flow_out = self.fastdata.flow[self.fastdata.flow < 0]
-            mve_meas_in = np.round(np.abs(np.trapz(flow_in)/(self.fastdata.fs*60.0)*scale),1)
-            mve_meas_out = np.round(np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale),1)
+            mve_meas_in = np.abs(np.trapz(flow_in)/(self.fastdata.fs*60.0)*scale)
+            mve_meas_out = np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale)
             #average the flow in and out to get a sensible result regardless of flow sensor drift
-            self.slowdata.mve_meas = np.round(np.mean([mve_meas_in, mve_meas_out]),1)
+            self.slowdata.mve_meas = np.mean([mve_meas_in, mve_meas_out])
 
 
             self.check_power()
@@ -682,6 +699,8 @@ class slow_loop(QtCore.QThread):
         self.ie = []
         self.c = []
         """
+        print('slowloop: trying to calculate breath params')
+        
         if len(self.i_min_vol) >= 2:
             # define the last breath
             self.tsi = self.fastdata.t[self.i_min_vol[-2]]
@@ -691,12 +710,14 @@ class slow_loop(QtCore.QThread):
 
             # update the time of the last breath
             self.slowdata.t_last = self.tee
-            
-            #if dt since the last breath has gone down since the last check, signal a new breath
+            """    
+            #if dt since the last breath has gone down since the last check, signal a new breath and calculate the parameters
             if self.slowdata.dt_last < self.dt_last_prev:
                 self.breath_detected.emit(self.slowdata.t_last)
             else:
                 self.dt_last_prev = self.slowdata.t_last
+            """
+            
             # index range of the last breath
             index_range = np.arange(self.i_min_vol[-2],self.i_min_vol[-1]+1)
 
@@ -710,16 +731,16 @@ class slow_loop(QtCore.QThread):
             self.slowdata.pip = np.max(self.fastdata.p1[index_range])
 
             # get respiratory rate (to one decimal place)
-            self.slowdata.rr = np.round(60.0/(self.dtee - self.dtsi),1)
+            self.slowdata.rr = 60.0/(self.dtee - self.dtsi)
 
             # get i:e ratio (to one decimal place)
             dt_exp = self.dtee - self.dtei
             dt_insp = self.dtei - self.dtsi
-            self.slowdata.ie = np.round(np.abs(dt_exp / dt_insp),1)
+            self.slowdata.ie = np.abs(dt_exp / dt_insp)
 
             # get minute volume
             # first infer it from the last breath: RR * VT
-            self.slowdata.mve_inf = np.round((self.slowdata.rr * self.slowdata.vt/1000.0),1)
+            self.slowdata.mve_inf = (self.slowdata.rr * self.slowdata.vt/1000.0)
 
 
             # get peep: average pressure over the 50 ms about the end of expiration
@@ -731,14 +752,17 @@ class slow_loop(QtCore.QThread):
             self.slowdata.pp = np.mean(self.fastdata.p1[(self.fastdata.dt>=self.dtei-dt_pip) & (self.fastdata.dt<=self.dtei)])
 
             # get static lung compliance. Cstat = VT/(PP - PEEP), reference: https://www.mdcalc.com/static-lung-compliance-cstat-calculation#evidence
-            self.slowdata.c = np.round(self.slowdata.vt/(self.slowdata.pp - self.slowdata.peep),1)
+            self.slowdata.c = self.slowdata.vt/(self.slowdata.pp - self.slowdata.peep)
 
+            """
             # round the pip and peep and vt
             self.slowdata.pip = np.round(self.slowdata.pip,1)
             self.slowdata.peep = np.round(self.slowdata.peep,1)
             self.slowdata.pp = np.round(self.slowdata.pp,1)
             self.slowdata.vt = np.round(self.slowdata.vt,1)
-
+            """
+                
+            
 
 
         else:

@@ -51,7 +51,8 @@ class GuiAlarms:
         self._obs = copy(config["alarms"])
         #self._esp32 = esp32
         self._monitors = monitors
-        self._armed = True
+        self._armed = False
+        self._audio_armed = True
         self._mon_to_obs = {}
         
         self._audio_alarm = audio.audio_alarm(filepath = main_path + '/monitor/audio')
@@ -147,7 +148,7 @@ class GuiAlarms:
         - item: dict of settings from the config file
         - value: value to test against
         """
-        print('guialarm: testing thresholds')
+        #print('guialarm: testing thresholds')
         if self._armed:
             self._test_over_threshold(item, value)
             self._test_under_threshold(item, value)
@@ -188,7 +189,14 @@ class GuiAlarms:
         # sound audio alarm if there are any alarmed monitors
         
         if self._armed:
-            self.sound_alarms()
+            
+            # if there are no alarms, reset audio to default to sound when new alarms come in
+            if len(self._alarmed_monitors) == 0:
+                self._audio_armed = True
+            
+            if self._audio_armed:
+                self.sound_alarms()
+            
             for observable in data:
                 item = self._get_by_observable(observable)
                 if item is not None:
@@ -198,6 +206,7 @@ class GuiAlarms:
             pass
     
     def sound_alarms(self):
+        
         try:
             #print('GUI ALARM: sounding alarm if there are any alarms')
             if len(self._alarmed_monitors)>0:
@@ -332,16 +341,13 @@ class GuiAlarms:
             
         self._alarmed_monitors = set() 
         
-        
-        """
-        # need to make a copy otherwise the loop size changes as it removes them
-        
-        # clear any running alarms:
-        for name in alarmed_monitors:
-            self._alarmed_monitors.remove(name)
-            if len(self._alarmed_monitors) == 0:
-                #self._esp32.snooze_gui_alarm()
-                pass
-        """
+     
+    def silence_alarms(self):
+        '''
+        mute the audio alarms.
+        '''
+        self._audio_armed = False
+        self._audio_alarm.silence()
+
 if __name__ == '__main__':
     audio_alarm = audio.audio_alarm(filepath = main_path + '/audio/')
