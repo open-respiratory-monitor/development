@@ -382,7 +382,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_line0 = self.graph0.plot(self.fastdata.dt,    self.fastdata.p1,       pen = yellow)
             self.data_line1 = self.graph1.plot(self.fastdata.dt,    self.fastdata.flow,       pen = blue)
             #self.data_line1b = self.graph1.plot(self.fastdata.dt,   self.fastdata.p2, pen = bluepen)
-            self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.conc, pen = pink)
+            self.data_line2 = self.graph2.plot(self.fastdata.dt,    self.fastdata.dflow, pen = pink)
             self.data_line3 = self.graph3.plot(self.fastdata.dt,    self.fastdata.vol*1000,      pen = green)
 
             
@@ -627,7 +627,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_line0.setData(self.fastdata.dt,   self.fastdata.p1)
             #self.data_line1b.setData(self.fastdata.dt,   self.fastdata.p2)
             self.data_line1.setData(self.fastdata.dt, self.fastdata.flow)
-            self.data_line2.setData(self.fastdata.dt,   self.fastdata.conc)#flow)
+            self.data_line2.setData(self.fastdata.dt,   self.fastdata.d2flow)#flow)
             self.data_line3.setData(self.fastdata.dt,   self.fastdata.vol*1000) #update the data
 
 

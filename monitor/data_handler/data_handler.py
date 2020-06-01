@@ -72,12 +72,14 @@ class fast_data(object):
         # flow
         self.flow = np.array([])
         self.flow_raw = np.array([])
-
+        self.dflow = np.array([])
+        self.d2flow = np.array([])
+        
         # volume
         self.vol_raw = np.array([])
         self.vol_drift = np.array([]) # the drift volume which is the spline line through the detrended volume
         self.vol = np.array([])
-        self.conc = np.array([])
+        
         # time
         self.t_obj = np.array([]) # datetime object
         self.dt = np.array([])    # dt since first sample in vector
@@ -260,7 +262,7 @@ class fast_loop(QtCore.QThread):
         elif self.vol_drift_poly[1] < (-1.0*max_slope):
             self.vol_drift_poly[1] = -1.0*max_slope
         self.vol_offset = np.min(self.fastdata.vol_raw - np.polyval(self.vol_drift_poly, self.fastdata.t))
-        #print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
+        print(f'\n\nfastloop: Updated flow trend equation: V = {self.vol_drift_poly[0]}*t + {self.vol_drift_poly[1]}')
         #print(f'fastloop: volume offset = {self.vol_offset}\n\n')
         
         
@@ -335,19 +337,25 @@ class fast_loop(QtCore.QThread):
         # build up a vector of the flow slope (ie the volume concavity)
         N = 50
         if len(self.fastdata.flow)> N:
-            self.fastdata.conc = self.add_new_point(self.fastdata.conc,np.mean(self.fastdata.flow[-N:-1]-self.fastdata.flow[-N+1:]),self.num_samples_to_hold)
+            self.fastdata.dflow = self.add_new_point(self.fastdata.dflow,np.mean(self.fastdata.flow[-N+1:] - self.fastdata.flow[-N:-1]),self.num_samples_to_hold)
         else:
-            self.fastdata.conc = self.add_new_point(self.fastdata.conc,0,self.num_samples_to_hold)
+            self.fastdata.dflow = self.add_new_point(self.fastdata.dflow,0,self.num_samples_to_hold)
+        
+        # build up the flow second derivative
+        if len(self.fastdata.flow)> N:
+            self.fastdata.d2flow = self.add_new_point(self.fastdata.d2flow,np.mean(self.fastdata.dflow[-N+1:] - self.fastdata.dflow[-N:-1]),self.num_samples_to_hold)
+        else:
+            self.fastdata.d2flow = self.add_new_point(self.fastdata.d2flow,0,self.num_samples_to_hold)
         
         
         # if the flow slope is below a theshold, then we'll call it zero, and add zero to the volume
-        if (np.abs(self.fastdata.conc[-1]) < 0.1) & (np.abs(self.fastdata.flow[-1]) < 5.0):
+        if (np.abs(self.fastdata.dflow[-1]) < 0.1) & (np.abs(self.fastdata.flow[-1]) < 5.0) & (np.abs(self.fastdata.d2flow[-1] < 1.0)):
             self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw, 0.0, self.num_samples_to_hold)
         else:
             self.fastdata.vol_raw = self.add_new_point(self.fastdata.vol_raw,self.fastdata.flow[-1]/(self.fastdata.fs*60.0)+self.vol_integral_to_now,self.num_samples_to_hold)
         
         # trigger a new breath if the slope flow is above a threshold
-        if (self.fastdata.conc[-1] < -0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
+        if (self.fastdata.dflow[-1] > 0.5) & ((self.fastdata.t[-1] - self.time_last_breath) > 1.0):
             self.vol_integral_to_now = 0.0
             self.time_last_breath = self.fastdata.t[-1]
             #beep()
