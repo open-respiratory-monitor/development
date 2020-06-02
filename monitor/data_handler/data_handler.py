@@ -105,6 +105,11 @@ class slow_data(object):
         self.c = None
         self.t_last = datetime.utcnow().timestamp()
         self.dt_last = 0.0
+        self.newbreath_detected = False
+        
+        
+        
+
 
         # pi GPIO state
         self.lowbatt = None
@@ -543,10 +548,15 @@ class slow_loop(QtCore.QThread):
         # set up a place to store the slow data that is calculated each time this loop runs
         self.slowdata = slow_data()
 
+        
         # note the time the loop is executed
         self.t_obj = datetime.utcnow()
         self.t = self.t_obj.timestamp()
-        self.dt_last_prev = 100000000.0
+        self.t_last_prev = 0
+        
+        # the time the slowloop was created
+        self.t_created = np.copy(self.t)
+        
         # time between samples
         self.ts = self.config['slowdata_interval'] #ms
 
@@ -634,7 +644,8 @@ class slow_loop(QtCore.QThread):
 
             # Do these whether or not a breath is detected!
             # how long ago was the last breath started?
-            self.slowdata.dt_last = np.round((self.t - self.slowdata.t_last),2)
+            
+            self.slowdata.dt_last = (self.t - self.slowdata.t_last)
 
             # now measure the realtime value (it fluctuates but stays near the real value, and is valuable if no breaths are delivered)
                 # we don't display a full minute so need to scale answer
@@ -644,7 +655,7 @@ class slow_loop(QtCore.QThread):
             mve_meas_in = np.abs(np.trapz(flow_in)/(self.fastdata.fs*60.0)*scale)
             mve_meas_out = np.abs(np.trapz(flow_out)/(self.fastdata.fs*60.0)*scale)
             #average the flow in and out to get a sensible result regardless of flow sensor drift
-            self.slowdata.mve_meas = np.mean([mve_meas_in, mve_meas_out])
+            self.slowdata.mve_meas = ( np.mean([mve_meas_in, mve_meas_out]))
 
 
             self.check_power()
@@ -678,7 +689,7 @@ class slow_loop(QtCore.QThread):
         self.i_min_vol = utils.breath_detect_coarse(-1*self.fastdata.vol, fs = self.fastdata.fs,minpeak = 0.0)
 
         if self.verbose:
-            print(f"slowloop: found {len(self.slowdata.index_of_min)} peaks at dt = {self.fastdata.dt[self.i_min_vol]}")
+            print(f"slowloop: found {len(self.i_min_vol)} peaks at dt = {self.fastdata.dt[self.i_min_vol]}")
 
 
 
@@ -709,50 +720,53 @@ class slow_loop(QtCore.QThread):
             self.dtee = self.fastdata.dt[self.i_min_vol[-1]]
 
             # update the time of the last breath
-            self.slowdata.t_last = self.tee
-            """    
-            #if dt since the last breath has gone down since the last check, signal a new breath and calculate the parameters
-            if self.slowdata.dt_last < self.dt_last_prev:
-                self.breath_detected.emit(self.slowdata.t_last)
+            self.slowdata.t_last = ( self.tee )
+            #print(f'slowloop: self.slowdata.t_last = {self.slowdata.t_last}, self.t_last_prev = {self.t_last_prev}, delta = {self.slowdata.t_last - self.t_last_prev}')
+            #if the "last breath" has changed by more than some threshold time, it's a new breath
+            if (self.slowdata.t_last - self.t_last_prev) > 0.5:
+                self.slowdata.newbreath_detected = True
+                print('slowloop: new breath detected')
+                self.t_last_prev = self.slowdata.t_last
             else:
-                self.dt_last_prev = self.slowdata.t_last
-            """
-            
+                #self.dt_last_prev = self.slowdata.t_last
+                self.slowdata.newbreath_detected = False
+                print('slowloop: NO new breath detected')
             # index range of the last breath
             index_range = np.arange(self.i_min_vol[-2],self.i_min_vol[-1]+1)
 
 
             # get tidal volume (in mL) and the end inspiration time (both defined at vol peak over last breath)
-            self.slowdata.vt = np.max(self.fastdata.vol[index_range])*1000
+            self.slowdata.vt = ( np.max(self.fastdata.vol[index_range])*1000)
             self.i_max_vol_last = index_range[np.argmax(self.fastdata.vol[index_range])]
             self.dtei = self.fastdata.dt[self.i_max_vol_last]
 
             # get pip: peak pressure over last breath
-            self.slowdata.pip = np.max(self.fastdata.p1[index_range])
-
+            self.slowdata.pip = ( np.max(self.fastdata.p1[index_range]))
+            
+           
             # get respiratory rate (to one decimal place)
-            self.slowdata.rr = 60.0/(self.dtee - self.dtsi)
+            self.slowdata.rr = (60.0/(self.dtee - self.dtsi))
 
             # get i:e ratio (to one decimal place)
             dt_exp = self.dtee - self.dtei
             dt_insp = self.dtei - self.dtsi
-            self.slowdata.ie = np.abs(dt_exp / dt_insp)
+            self.slowdata.ie = ( np.abs(dt_exp / dt_insp))
 
             # get minute volume
             # first infer it from the last breath: RR * VT
-            self.slowdata.mve_inf = (self.slowdata.rr * self.slowdata.vt/1000.0)
+            self.slowdata.mve_inf = ( (self.slowdata.rr * self.slowdata.vt/1000.0))
 
 
             # get peep: average pressure over the 50 ms about the end of expiration
             dt_peep = 0.05
-            self.slowdata.peep = np.mean(self.fastdata.p1[(self.fastdata.dt>=self.dtee-(dt_peep/2)) & (self.fastdata.dt<=self.dtee+(dt_peep/2))])
+            self.slowdata.peep = ( np.mean(self.fastdata.p1[(self.fastdata.dt>=self.dtee-(dt_peep/2)) & (self.fastdata.dt<=self.dtee+(dt_peep/2))]))
 
             # get pp: plateau pressure -- defined as mean pressure over 50 ms before the end of inspiration
             dt_pip = 0.05
-            self.slowdata.pp = np.mean(self.fastdata.p1[(self.fastdata.dt>=self.dtei-dt_pip) & (self.fastdata.dt<=self.dtei)])
+            self.slowdata.pp = (np.mean(self.fastdata.p1[(self.fastdata.dt>=self.dtei-dt_pip) & (self.fastdata.dt<=self.dtei)]))
 
             # get static lung compliance. Cstat = VT/(PP - PEEP), reference: https://www.mdcalc.com/static-lung-compliance-cstat-calculation#evidence
-            self.slowdata.c = self.slowdata.vt/(self.slowdata.pp - self.slowdata.peep)
+            self.slowdata.c = ( self.slowdata.vt/(self.slowdata.pp - self.slowdata.peep))
 
             """
             # round the pip and peep and vt

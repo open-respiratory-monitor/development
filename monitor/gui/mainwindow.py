@@ -34,6 +34,9 @@ from monitor_class.Monitor import Monitor
 #from numpad.numpad import NumPad
 from alarms.guialarms import GuiAlarms
 from alarm_handler import AlarmHandler
+from tools.tools import tools
+from statistics.statsbar import statsbar
+from statistics.statistics import Statset
 
 #from communication.fake_esp32serial import FakeESP32Serial
 #from alarm_handler import AlarmHandler
@@ -54,6 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
     request_to_update_cal = QtCore.pyqtSignal(object)
     update_vol_offset = QtCore.pyqtSignal(float)
     restart_looping_plot = QtCore.pyqtSignal()
+    new_sensor_cal = QtCore.pyqtSignal(str)
 
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
@@ -130,6 +134,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #if the fastloop detects a new exhalation, try to calculate the breath params
         self.fast_loop.new_exhale.connect(self.slow_loop.calculate_breath_params)
 
+        # if a new sensor calibration is selected, pass the new selection to fastdata.sensor
+        self.new_sensor_cal.connect(self.fast_loop.sensor.set_mouthpiece)
+        
+        
+        
+        
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
         ### GUI stuff ###
@@ -143,8 +153,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.initial = self.findChild(QtWidgets.QWidget, "initial")
         #self.startup = self.findChild(QtWidgets.QWidget, "startup")
         self.alarmbar = self.findChild(QtWidgets.QWidget, "alarmbar")
-
-        
+        self.toolbar = self.findChild(QtWidgets.QWidget, "toolbar")
+        self.calpage = self.findChild(QtWidgets.QWidget,"calibration")
+        self.statspage = self.findChild(QtWidgets.QWidget,"statspage")
         '''
         Get the center pane (plots) widgets
         '''
@@ -168,7 +179,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QWidget, "alarms_settings")
         self.alarmsbar = self.findChild(QtWidgets.QWidget, "alarmsbar")
 
-
+        
 
 
         '''
@@ -234,8 +245,41 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_offalarm = self.alarmsbar.findChild(
             QtWidgets.QPushButton, "button_offalarm")
         
+        '''
+        # stats bar
+        '''
+        self.statsbar = self.findChild(
+            QtWidgets.QWidget,"statsbar")
+        self.button_backstats = self.statsbar.findChild(
+            QtWidgets.QPushButton,"button_back")
         
-
+        # set up the statistics set which will hold useful statistics about the breaths
+        self.statset = Statset()
+        for name in self.config['statistics']:
+            self.statset.add_stat(name)
+            #print("found statistic: ",name)
+        # set the current stat that will be shown
+        
+        self.currentstat = self.config['statistics'][0]
+        
+        '''
+        # toolbar buttons
+        '''
+        
+        self.button_backsettings = self.toolbar.findChild(
+            QtWidgets.QPushButton,"button_back")
+        
+        self.button_calsettings = self.toolbar.findChild(
+            QtWidgets.QPushButton,"button_calsettings")
+        
+        self.button_hamilton = self.calpage.findChild(
+            QtWidgets.QPushButton,"button_hamilton")
+        self.button_iqspiro = self.calpage.findChild(
+            QtWidgets.QPushButton,"button_iqspiro")
+        
+        self.button_stats = self.toolbar.findChild(
+            QtWidgets.QPushButton,"button_stats")
+        
         '''
         Frozen Plot menu
         '''
@@ -287,7 +331,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.alarms_settings.move_selected_down)
 
         
-
+       
         
         
         
@@ -331,7 +375,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
         
-        self.button_tools.setEnabled(False)
+        # toolbar
+        self.button_tools.pressed.connect(self.show_toolbar)
+        self.button_backsettings.pressed.connect(self.exit_alarms)
+        self.button_calsettings.pressed.connect(self.goto_calsettings)
+        self.button_stats.pressed.connect(self.goto_stats)
+        self.button_backstats.pressed.connect(self.show_toolbar)
+        
+        # calibration selection
+        self.button_hamilton.toggled.connect(self.togglecal_hamilton)
+        self.button_iqspiro.toggled.connect(self.togglecal_iqspiro)
+        
         
         ''' 
         arming the alarms
@@ -413,14 +467,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-    ### MVM gui-related functions ###
+    ###  gui-related functions ###
+    
+    
+    
+    
     def lock_screen(self):
         """
         Perform screen locking.
         """
 
         self.toppane.setDisabled(True)
-        self.show_toolbar(locked_state=True)
+        #self.show_toolbar(locked_state=True)
         self.alarms_settings.set_enabled_state(False)
 
     def unlock_screen(self):
@@ -429,7 +487,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
 
         self.toppane.setEnabled(True)
-        self.show_toolbar(locked_state=False)
+        #self.show_toolbar(locked_state=False)
         self.alarms_settings.set_enabled_state(True)
 
     def handle_unlock(self):
@@ -462,7 +520,73 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.update_config(self.user_settings)
 
         self.show_startup()
+    
+    def goto_stats(self):
+        """
+        open up the statistics page
+        """
+        self.toppane.setCurrentWidget(self.statspage)
+        self.show_statsbar()
+    
+    def show_statsbar(self):
+        self.bottombar.setCurrentWidget(self.statsbar)
+    
+    def goto_calsettings(self):
+        """
+        open the calibration settings pane
 
+        """
+        self.check_sensor_cal()
+        self.toppane.setCurrentWidget(self.calpage)
+        #self.calpage.tabs.setFocus()
+    
+    def togglecal_hamilton(self):
+        """
+        toggles the calibration when you click iqspiro
+        """
+        
+        if self.button_hamilton.isChecked():
+            self.button_iqspiro.setChecked(False)
+        elif not(self.button_hamilton.isChecked()):
+            self.button_iqspiro.setChecked(True)
+        
+        self.update_sensor_cal()
+        
+    def togglecal_iqspiro(self):
+        """
+        toggles the calibration when you click iqspiro
+        """
+        
+        if self.button_iqspiro.isChecked():
+            self.button_hamilton.setChecked(False)
+        elif not(self.button_iqspiro.isChecked()):
+            self.button_hamilton.setChecked(True)
+        
+        self.update_sensor_cal()
+    
+    def update_sensor_cal(self):
+        """
+        updates the calibration ie mouthpiece selection of the sensor
+        """
+        if self.button_iqspiro.isChecked():
+            self.new_sensor_cal.emit('iqspiro')
+        
+        else:
+            self.new_sensor_cal.emit('hamilton')
+   
+    def check_sensor_cal(self):
+        """
+        checks the current sensor cal to decide which box to check in the menu
+        """
+        print("mainloop: mouthpiece = ",self.fast_loop.sensor.mouthpiece)
+        if self.fast_loop.sensor.mouthpiece == 'hamilton':
+            self.button_hamilton.setChecked(True)
+            self.button_iqspiro.setChecked(False)
+        elif self.fast_loop.sensor.mouthpiece == 'iqspiro':
+            self.button_hamilton.setChecked(False)
+            self.button_iqspiro.setChecked(True)
+            
+        
     def goto_settings(self):
         """
         Open the Settings pane.
@@ -547,11 +671,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         shows the menu button.
         """
         self.bottombar.setCurrentWidget(self.toolbar)
+        """
         if locked_state:
             self.home_button.setCurrentWidget(self.goto_unlock)
         else:
             self.home_button.setCurrentWidget(self.goto_menu)
-
+        """
     def show_settingsbar(self):
         """
         Open the settings submenu.
@@ -696,20 +821,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         """
+        
+         # define the mapping between monitor names and data points   
         self.monitor_mapping = {'peak' : self.slowdata.pip,
-                       'peep' : self.slowdata.peep,
-                       'minute_volume_measured' : self.slowdata.mve_meas,
-                       'tidal_volume' : self.slowdata.vt,
-                       'respiratory_rate': self.slowdata.rr,
-                       'i_to_e_ratio' : self.slowdata.ie,
-                       'cstat' : self.slowdata.c,
-                       'apnea_time' : self.slowdata.dt_last,
-                       'battery_low': self.slowdata.lowbatt,
-                       'battery_charging' : self.slowdata.charging}
+                   'peep' : self.slowdata.peep,
+                   'minute_volume_measured' : self.slowdata.mve_meas,
+                   'tidal_volume' : self.slowdata.vt,
+                   'respiratory_rate': self.slowdata.rr,
+                   'i_to_e_ratio' : self.slowdata.ie,
+                   'cstat' : self.slowdata.c,
+                   'apnea_time' : self.slowdata.dt_last,
+                   'battery_low': self.slowdata.lowbatt,
+                   'battery_charging' : self.slowdata.charging}
 
-
-
-
+            
         for key in self.monitor_mapping.keys():
             try:
                 value = self.monitor_mapping[key]
@@ -720,6 +845,19 @@ class MainWindow(QtWidgets.QMainWindow):
             except Exception as e:
                 #print(f'main: could not update monitor {key}: ',e)
                 pass
+        
+        
+        # add the new data for the tracked statistics
+        if self.slowdata.newbreath_detected:
+        
+            for name in self.config['statistics']:
+                try:
+                    datapoint = self.monitor_mapping[name]
+                    if True:#self.verbose:
+                        print(f'adding  to statistics for {name}: {datapoint}')
+                    self.statset.add_data_point(name,datapoint)
+                except Exception as e:
+                    print(f'main: could not update statistics for {name}',e)
          
         # check for alarms
         """

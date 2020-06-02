@@ -74,14 +74,8 @@ class sensor(object):
         self.sensor2.low_pass_enabled = True
 
         # define the calibration file based on the mouthpiece
-        self.mouthpiece = mouthpiece
-        if self.mouthpiece.lower() == 'hamilton':
-            self.calfile = '/calibration/flow_calibration_hamilton.txt'
-        elif self.mouthpiece.lower() == 'iqspiro':
-            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
-
-        else:
-            raise ImportError('specified mouthpiece not defined')
+        self.set_mouthpiece(mouthpiece)
+        
                 
 
         # Define the unit conversion factor
@@ -104,6 +98,17 @@ class sensor(object):
         
         # Initialize the class values
         self.read()
+        
+    def set_mouthpiece(self,mouthpiece):
+        # define the calibration file based on the mouthpiece
+        self.mouthpiece = mouthpiece
+        print('sensor: set calibration to: ',self.mouthpiece)
+        if self.mouthpiece.lower() == 'hamilton':
+            self.calfile = '/calibration/flow_calibration_hamilton.txt'
+        elif self.mouthpiece.lower() == 'iqspiro':
+            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
+        else:
+            raise ImportError('specified mouthpiece not defined')
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
@@ -201,14 +206,9 @@ class fakesensor(object):
         self.lastline = len(self.time_arr)-1
 
         # define the calibration file based on the mouthpiece
-        self.mouthpiece = mouthpiece
-        if self.mouthpiece.lower() == 'hamilton':
-            self.calfile = '/calibration/flow_calibration_hamilton.txt'
-        elif self.mouthpiece.lower() == 'iqspiro':
-            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
+        self.set_mouthpiece(mouthpiece)
 
-        else:
-            raise ImportError('specified mouthpiece not defined')
+        
 
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
@@ -226,7 +226,19 @@ class fakesensor(object):
 
         # no flow offset initially
         self.dp_offset = 0.0
-
+        
+        
+    def set_mouthpiece(self,mouthpiece):
+        # define the calibration file based on the mouthpiece
+        self.mouthpiece = mouthpiece
+        print('sensor: set calibration to: ',self.mouthpiece)
+        if self.mouthpiece.lower() == 'hamilton':
+            self.calfile = '/calibration/flow_calibration_hamilton.txt'
+        elif self.mouthpiece.lower() == 'iqspiro':
+            self.calfile = '/calibration/flow_calibration_iqspiro.txt'
+        else:
+            raise ImportError('specified mouthpiece not defined')
+            
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
