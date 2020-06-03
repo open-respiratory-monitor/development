@@ -134,9 +134,18 @@ statistics:
 
 
 monitors:
+    flow:
+        name: "Flow"
+        init: 0
+        step: 1
+        dec_precision: 0
+        units: "[L/m]"
+        color: "rgb(255,255,255)"
+        alarmcolor: "red"
+        observable: flow
 
     peak: 
-        name: "Pmax<sub>insp</sub>" 
+        name: "Pmax" 
         init: 40
         step: 1
         dec_precision: 0
@@ -180,7 +189,7 @@ monitors:
         init: 100
         step: 1
         dec_precision: 1
-        units: "[slpm]"
+        units: "[L]"
         color: "rgb(255,255,255)"
         alarmcolor: "red"
         observable: minute_volume_measured
@@ -386,7 +395,7 @@ plots:
         name: "Flow"
         min: -100
         max: 100
-        units: "[l/m]"
+        units: "[L/m]"
         color: "rgb(50,205,50)"
         observable: flow
 

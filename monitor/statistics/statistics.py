@@ -76,9 +76,8 @@ class Statset():
     def reset_all(self):
         """
         empties all the previous data but keeps the structures
-
         """
-        
-        for name in self.names:
+        print('stats: clearing stats')
+        for name in self.names:            
             self.stats[name].data = []
             self.stats[name].update_stats()

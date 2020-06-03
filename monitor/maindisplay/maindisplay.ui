@@ -49,6 +49,9 @@
    </property>
    <item>
     <widget class="QStackedWidget" name="centerpane">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(0, 0, 0)</string>
+     </property>
      <widget class="QWidget" name="plots_all">
       <layout class="QGridLayout" name="gridLayout_5">
        <property name="leftMargin">
@@ -101,6 +104,8 @@
          <widget class="PlotWidget" name="plot_right" native="true"/>
         </item>
        </layout>
+       <zorder>plot_right</zorder>
+       <zorder>plot_left</zorder>
       </widget>
      </widget>
      <widget class="Alarms" name="alarms_settings"/>

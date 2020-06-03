@@ -50,7 +50,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="button_peak">
+    <widget class="QPushButton" name="button_tidal">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -70,7 +70,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="button_tidal">
+    <widget class="QPushButton" name="button_peak">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>

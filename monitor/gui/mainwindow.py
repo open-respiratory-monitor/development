@@ -58,7 +58,9 @@ class MainWindow(QtWidgets.QMainWindow):
     update_vol_offset = QtCore.pyqtSignal(float)
     restart_looping_plot = QtCore.pyqtSignal()
     new_sensor_cal = QtCore.pyqtSignal(str)
-
+    new_breath_data = QtCore.pyqtSignal(object) #received new breath data from fastloop
+    
+    
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
         """
@@ -107,6 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fastdata = data_handler.fast_data()
         self.slowdata = data_handler.slow_data()
         self.breathdata = data_handler.breath_data()
+        self.breathpar = data_handler.breath_par()
 
         # Start up the fast loop (data acquisition)
         self.fast_loop = data_handler.fast_loop(main_path = self.main_path, config = self.config, simulation = simulation, logdata = logdata,verbose = self.verbose)
@@ -117,8 +120,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # start up the slow loop (calculations)
         self.slow_loop = data_handler.slow_loop(main_path = self.main_path, config = self.config,  verbose = self.verbose)
         self.slow_loop.start()
-        self.slow_loop.newdata.connect(self.update_slow_data)
-
+        self.slow_loop.new_slowdata.connect(self.update_slow_data)
+        self.slow_loop.new_breathpar.connect(self.update_breath_params)
         # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
         self.request_from_slowloop.connect(self.slow_loop.update_fast_data)
@@ -132,15 +135,18 @@ class MainWindow(QtWidgets.QMainWindow):
         # if new breath detected tell fastloop to reset the integral
         #self.restart_looping_plot.connect(self.fast_loop.update_vol_trend)
 
-        #if the fastloop detects a new exhalation, try to calculate the breath params
-        self.fast_loop.new_exhale.connect(self.slow_loop.calculate_breath_params)
-
+        
+        
+        
+        #if new breath data is received from fastloop, pass it to slowloop and ask for the breath params to be calculated
+        self.new_breath_data.connect(self.slow_loop.calculate_breath_params)
+        
         # if a new sensor calibration is selected, pass the new selection to fastdata.sensor
         self.new_sensor_cal.connect(self.fast_loop.sensor.set_mouthpiece)
         
         # if the fastloop sends new breath data, populate the mainloop breathdata
         self.fast_loop.new_breath.connect(self.update_breath_data)
-        
+        self.fast_loop.new_breath.connect(self.slow_loop.update_breath_data)
         
         # want to just show the plots to dewbug the calculations?
         self.diagnostic = diagnostic
@@ -182,11 +188,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot_right = self.plots_loops.findChild(
             QtWidgets.QWidget,"plot_right")
         
-        labelStyle = {'color': '#FFF', 'font-size': '12pt'}
-        self.plot_left.setLabel('left','Tidal Volume','mL',**labelStyle)
-        self.plot_left.setLabel('bottom', 'Pressure', 'cmH2O', **labelStyle)
-        self.plot_right.setLabel('left','Flow','L/m',**labelStyle)
-        self.plot_right.setLabel('bottom','Pressure','cmH2O',**labelStyle)
+        labelStyle = {'color': self.config['axis_line_color'], 'font-size': '18pt'}
+        self.plot_left.setLabel('left',self.config['monitors']['tidal_volume']['name'] + '' + self.config['monitors']['tidal_volume']['units'],**labelStyle)
+        self.plot_left.setLabel('bottom', 'Pressure' + '' + self.config['monitors']['peep']['units'],**labelStyle)
+        self.plot_right.setLabel('left',self.config['monitors']['flow']['name'] + '' + self.config['monitors']['tidal_volume']['units'],**labelStyle)
+        self.plot_right.setLabel('bottom', 'Pressure' + '' + self.config['monitors']['peep']['units'],**labelStyle)
+        
+        # Remove mouse interaction with plots
+        self.plot_left.setMouseEnabled(x=False, y=False)
+        self.plot_left.setMenuEnabled(False)
+        self.plot_right.setMouseEnabled(x=False, y=False)
+        self.plot_right.setMenuEnabled(False)
+        
+    
+        
         yellow = pg.mkPen(color = 'y',width = 2)
         pink = pg.mkPen(color = 'm', width = 2)
         blue = pg.mkPen(color = 'b',width = 2)
@@ -281,10 +296,21 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QWidget,"statsbar")
         self.button_backstats = self.statsbar.findChild(
             QtWidgets.QPushButton,"button_back")
+        self.button_tidal = self.statsbar.findChild(
+            QtWidgets.QPushButton,"button_tidal")
+        self.button_peak = self.statsbar.findChild(
+            QtWidgets.QPushButton,"button_peak")
+        self.button_peep = self.statsbar.findChild(
+            QtWidgets.QPushButton,"button_peep")
+        
+        self.button_resetstats = self.statspage.findChild(
+            QtWidgets.QPushButton,"button_resetstats")
         
         '''
         stats page
         '''
+        self.stats_name = self.statspage.findChild(
+            QtWidgets.QLabel,"name_parameter")
         self.stats_mean = self.statspage.findChild(
             QtWidgets.QLabel,"num_mean")
         self.stats_min = self.statspage.findChild(
@@ -299,6 +325,9 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QLabel,"num_units")
         self.statplot = self.statspage.findChild(
             QtWidgets.QWidget,"plot_stats")
+        self.button_resetstats = self.statspage.findChild(
+            QtWidgets.QPushButton,"button_resetstats")
+        
         
         # make the plot
         pen = pg.mkPen(color = 'y',width = 2)
@@ -310,10 +339,11 @@ class MainWindow(QtWidgets.QMainWindow):
         for name in self.config['statistics']:
             self.statset.add_stat(name)
             #print("found statistic: ",name)
-        # set the current stat that will be shown
-        
+        # set the current stat that will be shown (by default its the first one in the config)
         self.current_stat = self.config['statistics'][0]
         print('mainloop: current stat = ',self.current_stat)
+        self.set_displayed_stat(self.current_stat)
+        
         
         '''
         # toolbar buttons
@@ -442,6 +472,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_hamilton.toggled.connect(self.togglecal_hamilton)
         self.button_iqspiro.toggled.connect(self.togglecal_iqspiro)
         
+        # stats page
+        self.button_tidal.pressed.connect(lambda: self.set_displayed_stat('tidal_volume'))
+        self.button_peak.pressed.connect(lambda: self.set_displayed_stat('peak'))
+        self.button_peep.pressed.connect(lambda: self.set_displayed_stat('peep'))
+        self.button_resetstats.pressed.connect(self.reset_stats)
         
         ''' 
         arming the alarms
@@ -822,6 +857,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.button_arm.setText('ARM \nAlarms')
             self.button_arm.setStyleSheet('QPushButton {color: green;}')
     
+    def set_displayed_stat(self,name):
+        # set the currently display stats in the statspage
+        self.current_stat = name
+        print('mainloop: current stat = ',self.current_stat)
+        self.update_displayed_stats()
+        
+        
+    
     def silence_alarms(self):
         self.gui_alarm.silence_alarms()
     
@@ -887,17 +930,17 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         
          # define the mapping between monitor names and data points   
-        self.monitor_mapping = {'peak' : self.slowdata.pip,
-                   'peep' : self.slowdata.peep,
-                   'minute_volume_measured' : self.slowdata.mve_meas,
-                   'tidal_volume' : self.slowdata.vt,
-                   'respiratory_rate': self.slowdata.rr,
-                   'i_to_e_ratio' : self.slowdata.ie,
-                   'cstat' : self.slowdata.c,
-                   'apnea_time' : self.slowdata.dt_last,
-                   'battery_low': self.slowdata.lowbatt,
-                   'battery_charging' : self.slowdata.charging}
-
+        self.monitor_mapping = {'peak' : self.breathpar.pip,
+                                'peep' : self.breathpar.peep,
+                                'minute_volume_measured' : self.slowdata.mve_meas,
+                                'tidal_volume' : self.breathpar.vt,
+                                'respiratory_rate': self.breathpar.rr,
+                                'i_to_e_ratio' : self.breathpar.ie,
+                                'cstat' : self.breathpar.c,
+                                'apnea_time' : self.slowdata.dt_last,
+                                'battery_low': self.slowdata.lowbatt,
+                                'battery_charging' : self.slowdata.charging}
+                    
             
         for key in self.monitor_mapping.keys():
             try:
@@ -913,18 +956,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
         
         
-        # add the new data for the tracked statistics
-        if self.slowdata.newbreath_detected:
-        
-            for name in self.config['statistics']:
-                try:
-                    datapoint = self.monitor_mapping[name]
-                    if True:#self.verbose:
-                        print(f'adding  to statistics for {name}: {datapoint}')
-                    self.statset.add_data_point(name,datapoint)
-                except Exception as e:
-                    print(f'main: could not update statistics for {name}',e)
-        self.update_displayed_stats()
         # check for alarms
         """
         self.gui_alarm = GuiAlarms(config, self.monitors)
@@ -941,26 +972,36 @@ class MainWindow(QtWidgets.QMainWindow):
         
             
     def update_loop_plots(self):
-        self.line_left.setData(self.breathdata.vol,self.breathdata.p)
-        self.line_right.setData(self.breathdata.flow,self.breathdata.p)
+        self.line_left.setData(self.breathdata.p, self.breathdata.vol)
+        self.line_right.setData(self.breathdata.p, self.breathdata.flow)
         
         
         
         
     ### slots to handle data transfer between threads ###
     
+    def reset_stats(self):
+        print('main: trying to reset stats')
+        #clear out the data in the stats
+        self.statset.reset_all()
+        self.update_displayed_stats()
+    
     def update_displayed_stats(self):
         # sends the stats for the selected statistic to the monitor
         stat = self.statset.stats[self.current_stat]
-        
+        name = self.config['monitors'][self.current_stat]['name']
+        self.stats_name.setText(name)
         self.stats_mean.setText('%0.2f'%stat.mean)
         self.stats_min.setText('%0.2f' %stat.min)
         self.stats_max.setText('%0.2f' %stat.max)
         self.stats_pcterr.setText('%0.2f' %stat.pcterr)
         self.stats_stderr.setText('%0.2f' %stat.stderr)
-        self.stats_units.setText(self.config['monitors'][self.current_stat]['units'])
+        units = self.config['monitors'][self.current_stat]['units']
+        self.stats_units.setText(units)
     
-        
+        labelStyle = {'color': self.config['axis_line_color'], 'font-size': '18pt'}
+        self.statplot.setLabel('left',name,units,**labelStyle)
+        self.statplot.setLabel('bottom','Sample ','',**labelStyle)
         self.statline.setData(np.arange(len(stat.data)),  stat.data)
     
     def update_breath_data(self,data):
@@ -968,7 +1009,33 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.verbose:
             print("main: received new breath data from fastloop")
         self.breathdata = data
+        #print(f'main: self.breathdata.tsi = {self.breathdata.tsi}')
+        #print(f'main: self.breathdata.tei = {self.breathdata.tei}')
+        #print(f'main: self.breathdata.tee = {self.breathdata.tee}')
         self.update_loop_plots()
+        self.new_breath_data.emit(self.breathdata)
+    
+    def update_breath_params(self,data):
+        # gets the new breath parameters calculated by the slow loop
+        if self.verbose:
+            print("main: received new breath parameters from slowloop")
+        self.breathpar = data
+        print(f"main: peep = {self.breathpar.peep}")
+        self.update_monitors()
+        
+        
+        # add the new data for the tracked statistics     
+        for name in self.config['statistics']:
+            try:
+                datapoint = self.monitor_mapping[name]
+                if True:#self.verbose:
+                    print(f'adding  to statistics for {name}: {datapoint}')
+                self.statset.add_data_point(name,datapoint)
+            except Exception as e:
+                print(f'main: could not update statistics for {name}',e)
+        self.update_displayed_stats()
+        
+        
     
     def update_fast_data(self,data):
         if self.verbose:
@@ -984,9 +1051,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fast_loop.sensor.set_zero_flow()
 
     def update_slow_data(self,data):
-        if self.verbose:
+        if True:#self.verbose:
             print("main: received new data from slowloop!")
         self.slowdata = data
+        print(f"main: slowloop data: dt_last = {self.slowdata.dt_last}")
         self.update_monitors()
         #os.system('cls' if os.name == 'nt' else 'clear')
         #data.print_data()
