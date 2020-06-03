@@ -106,6 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.fastdata = data_handler.fast_data()
         self.slowdata = data_handler.slow_data()
+        self.breathdata = data_handler.breath_data()
 
         # Start up the fast loop (data acquisition)
         self.fast_loop = data_handler.fast_loop(main_path = self.main_path, config = self.config, simulation = simulation, logdata = logdata,verbose = self.verbose)
@@ -137,7 +138,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # if a new sensor calibration is selected, pass the new selection to fastdata.sensor
         self.new_sensor_cal.connect(self.fast_loop.sensor.set_mouthpiece)
         
-        
+        # if the fastloop sends new breath data, populate the mainloop breathdata
+        self.fast_loop.new_breath.connect(self.update_breath_data)
         
         
         # want to just show the plots to dewbug the calculations?
@@ -156,13 +158,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolbar = self.findChild(QtWidgets.QWidget, "toolbar")
         self.calpage = self.findChild(QtWidgets.QWidget,"calibration")
         self.statspage = self.findChild(QtWidgets.QWidget,"statspage")
+        
+        
         '''
         Get the center pane (plots) widgets
         '''
         self.centerpane = self.findChild(
             QtWidgets.QStackedWidget, "centerpane")
         self.plots_all = self.findChild(QtWidgets.QWidget, "plots_all")
-
+        self.plots_loops = self.centerpane.findChild(
+            QtWidgets.QWidget,"plots_loops")
 
 
         self.plots = {}
@@ -170,7 +175,26 @@ class MainWindow(QtWidgets.QMainWindow):
             plot = self.main.findChild(QtWidgets.QWidget, name)
             self.data_filler.connect_plot(name,plot)
             self.plots[name] = plot
+        
+        # set up the loop plots
+        self.plot_left = self.plots_loops.findChild(
+            QtWidgets.QWidget,"plot_left")
+        self.plot_right = self.plots_loops.findChild(
+            QtWidgets.QWidget,"plot_right")
+        
+        labelStyle = {'color': '#FFF', 'font-size': '12pt'}
+        self.plot_left.setLabel('left','Tidal Volume','mL',**labelStyle)
+        self.plot_left.setLabel('bottom', 'Pressure', 'cmH2O', **labelStyle)
+        self.plot_right.setLabel('left','Flow','L/m',**labelStyle)
+        self.plot_right.setLabel('bottom','Pressure','cmH2O',**labelStyle)
+        yellow = pg.mkPen(color = 'y',width = 2)
+        pink = pg.mkPen(color = 'm', width = 2)
+        blue = pg.mkPen(color = 'b',width = 2)
+        green = pg.mkPen(color = 'g', width = 2)
 
+        # define the curves to plot
+        self.line_left = self.plot_left.plot([0],[0],       pen = yellow)
+        self.line_right = self.plot_right.plot([0],[0],pen = blue)
 
         '''
         Get the alarm-related stuff
@@ -229,9 +253,14 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.button_freeze = self.settingsfork.findChild(
             QtWidgets.QPushButton,"button_freeze")
-
+        
         self.button_tools = self.settingsfork.findChild(
             QtWidgets.QPushButton,"button_tools")
+        self.button_viewwaves = self.settingsfork.findChild(
+            QtWidgets.QPushButton,"button_viewwaves")
+        self.button_viewloops = self.settingsfork.findChild(
+            QtWidgets.QPushButton,"button_viewloops")
+        
         self.button_backalarms = self.alarmsbar.findChild(
             QtWidgets.QPushButton, "button_backalarms")
         self.button_applyalarm = self.alarmsbar.findChild(
@@ -396,7 +425,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_downalarm.pressed.connect(
             self.alarms_settings.move_selected_down)
         self.button_backalarms.pressed.connect(self.exit_alarms)
-
+        
+        self.button_viewloops.pressed.connect(self.show_loops)
+        self.button_viewwaves.pressed.connect(self.show_waveforms)
+        
         #self.button_zero_flow.pressed.connect(self.zero_sensor_flow)
         
         # toolbar
@@ -494,6 +526,11 @@ class MainWindow(QtWidgets.QMainWindow):
     ###  gui-related functions ###
     
     
+    def show_waveforms(self):
+        self.centerpane.setCurrentWidget(self.plots_all)
+    
+    def show_loops(self):
+        self.centerpane.setCurrentWidget(self.plots_loops)
     
     
     def lock_screen(self):
@@ -721,6 +758,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
 
         self.toppane.setCurrentWidget(self.main)
+        self.show_waveforms()
 
     def show_settingsfork(self):
         """
@@ -817,7 +855,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     print('main: restarting loop on plots')
                 #self.update_vol_offset.emit(self.slowdata.t_last)
                 #self.restart_looping_plot.emit()
-                
+        
+            
+        
     def update_monitors(self):
         """
         displayed_monitors:
@@ -898,7 +938,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.gui_alarm.set_data(self.monitor_mapping)
         except Exception as e:
             print('main: could not send data to guialarm: ',e)
+        
             
+    def update_loop_plots(self):
+        self.line_left.setData(self.breathdata.vol,self.breathdata.p)
+        self.line_right.setData(self.breathdata.flow,self.breathdata.p)
+        
+        
+        
+        
     ### slots to handle data transfer between threads ###
     
     def update_displayed_stats(self):
@@ -914,7 +962,14 @@ class MainWindow(QtWidgets.QMainWindow):
     
         
         self.statline.setData(np.arange(len(stat.data)),  stat.data)
-        
+    
+    def update_breath_data(self,data):
+        # gets the new breath data from the fast loop
+        if self.verbose:
+            print("main: received new breath data from fastloop")
+        self.breathdata = data
+        self.update_loop_plots()
+    
     def update_fast_data(self,data):
         if self.verbose:
             print("main: received new data from fastloop!")

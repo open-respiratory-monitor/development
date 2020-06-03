@@ -996,6 +996,27 @@ Statistics</string>
         <property name="spacing">
          <number>0</number>
         </property>
+        <item row="0" column="4">
+         <widget class="QPushButton" name="button_viewloops">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>View
+Loops</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="2">
          <widget class="QPushButton" name="button_freeze">
           <property name="sizePolicy">
@@ -1019,7 +1040,7 @@ Statistics</string>
           </property>
           <property name="text">
            <string>Freeze
-Plots</string>
+Waveforms</string>
           </property>
          </widget>
         </item>
@@ -1468,7 +1489,7 @@ Alarms</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="4">
+        <item row="0" column="6">
          <widget class="QPushButton" name="button_alarms">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -1501,7 +1522,7 @@ Settings</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="5">
+        <item row="0" column="7">
          <widget class="QPushButton" name="button_tools">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
@@ -1543,7 +1564,7 @@ Alarms</string>
          </widget>
         </item>
         <item row="0" column="3">
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="button_viewwaves">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -1559,7 +1580,7 @@ Alarms</string>
           </property>
           <property name="text">
            <string>View
-Loops</string>
+Waveforms</string>
           </property>
          </widget>
         </item>

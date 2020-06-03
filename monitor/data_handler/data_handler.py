@@ -89,6 +89,20 @@ class fast_data(object):
         # all_fields (this is how the data filler wants data)
         self.all_fields = dict()
 
+class breath_data(object):
+    # vectors that just hold the last full breath of data
+    def __init__(self):
+        self.reset()
+    
+    def reset(self):
+        self.p = np.array([])
+        self.flow = np.array([])
+        self.vol = np.array([])
+        self.dt = np.array([])
+        self.tsi = float() # time of start of inspriation
+        self.tei = float() # time of end of inspriation
+        self.tee = float() # time of end of expriration
+
 class slow_data(object):
     def __init__(self):
 
@@ -133,7 +147,7 @@ class slow_data(object):
         print(f'Low Battery = {self.lowbatt}')
 
 
-def add_new_point(self,arr,new_point,maxlen):
+def add_new_point(arr,new_point,maxlen):
        # adds a new data point to the array,
        # and keeps gets rid of the oldest point
 
@@ -166,6 +180,9 @@ class fast_loop(QtCore.QThread):
     newdata = QtCore.pyqtSignal(object)
     new_inhale = QtCore.pyqtSignal()
     new_exhale = QtCore.pyqtSignal()
+    
+    
+    new_breath = QtCore.pyqtSignal(object) 
 
     def __init__(self, main_path, config, correct_vol = False, simulation = False,logdata = False,verbose = False):
 
@@ -191,7 +208,8 @@ class fast_loop(QtCore.QThread):
         # Define the instance of the object that will hold all the data
         self.fastdata = fast_data()
         self.slowdata = slow_data()
-
+        self.breathdata = breath_data()
+        
         # current time loop is executed
         self.t_obj = datetime.utcnow()
         self.t = self.t_obj.timestamp()
@@ -384,13 +402,28 @@ class fast_loop(QtCore.QThread):
             print("\n\n\nfastloop: #### NEW INHALE ####\n\n\n")
             self.new_inhale.emit()
             
+            # mark the current time as the end of exhalation
+            self.breathdata.tee = self.fastdata.t[-1]
+            
+            # blast out the new breath data to main
+            self.new_breath.emit(self.breathdata)
+            
+            # reset the data in the current breath
+            self.breathdata.reset()
+            # mark the time of the start of inspiration
+            self.breathdata.tsi = self.fastdata.t[-1]
+            
         else:
             self.vol_integral_to_now = self.fastdata.vol_raw[-1]
         
+        # trigger the end of inspiration
         if (self.fastdata.dflow[-1] < -0.25) & (self.fastdata.flow[-1] < -10.0):
             self.insp = False
             self.new_exhale.emit()
             print("\n\n\nfastloop: #### NEW EXHALE ####\n\n\n")
+            # mark the time of the end of inspiration
+            self.breathdata.tee = self.fastdata.t[-1]
+            
             
         self.fastdata.insp = self.add_new_point(self.fastdata.insp, self.insp, self.num_samples_to_hold)    
         
@@ -456,8 +489,12 @@ class fast_loop(QtCore.QThread):
         #self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000 - self.vol_offset}) # in mL
         self.fastdata.all_fields.update({'volume' : self.fastdata.vol[-1]*1000}) # in mL
 
-
-
+        
+        # fill the data in the breathdata object
+        self.breathdata.p       = add_new_point(self.breathdata.p,      self.fastdata.p1[-1],                   self.num_samples_to_hold)
+        self.breathdata.flow    = add_new_point(self.breathdata.flow,   self.fastdata.flow[-1],                 self.num_samples_to_hold)
+        self.breathdata.vol     = add_new_point(self.breathdata.vol,    self.fastdata.vol[-1]*1000,             self.num_samples_to_hold)
+        self.breathdata.dt      = add_new_point(self.breathdata.dt,     self.fastdata.t[-1] - self.breathdata.tsi,  self.num_samples_to_hold)
 
     def log_raw_sensor_data(self):
 
