@@ -84,10 +84,7 @@ class sensor(object):
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
 
-        # flow calibration polynomial
-        if self.verbose:
-            print(f"trying to load calfile at {self.calfile}")
-        self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
+        
 
         
         # Zero the sensors
@@ -109,6 +106,10 @@ class sensor(object):
             self.calfile = '/calibration/flow_calibration_iqspiro.txt'
         else:
             raise ImportError('specified mouthpiece not defined')
+        
+        # now load the calibration data for the mouthpiece
+        self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
+            
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
@@ -139,6 +140,7 @@ class sensor(object):
         print('p2_0 = ',self.sensor2.pressure,' mbar')
         print('p2_0 = ',self.sensor2.pressure*self.mbar2cmh20,' cmH20')
         print()
+        
     def set_zero_flow(self,samples_to_average = 100):
         dp_arr = []
         for i in range(samples_to_average):
@@ -216,11 +218,7 @@ class fakesensor(object):
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
 
-        # flow calibration polynomial
-        if self.verbose:
-            print(f"trying to load calfile at {self.calfile}")
-        self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
-
+        
         #print statement
         print(f"Reading Simulated Data from File: {self.datafile}")
 
@@ -238,6 +236,9 @@ class fakesensor(object):
             self.calfile = '/calibration/flow_calibration_iqspiro.txt'
         else:
             raise ImportError('specified mouthpiece not defined')
+        
+        # now load the calibration data for the mouthpiece
+        self.flowcal = np.loadtxt(self.main_path + self.calfile,delimiter = '\t',skiprows = 1)
             
     def dp2flow(self,dp_cmh20):
         flow_sign = np.sign(dp_cmh20)

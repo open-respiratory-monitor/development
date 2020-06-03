@@ -564,11 +564,11 @@
           <x>20</x>
           <y>70</y>
           <width>511</width>
-          <height>211</height>
+          <height>241</height>
          </rect>
         </property>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>570</x>
@@ -684,7 +684,7 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_mean_2">
+          <widget class="QLabel" name="label_units">
            <property name="font">
             <font>
              <pointsize>15</pointsize>
@@ -698,7 +698,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLabel" name="num_mean_2">
+          <widget class="QLabel" name="num_units">
            <property name="text">
             <string>TextLabel</string>
            </property>
@@ -706,13 +706,13 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
-          <x>260</x>
-          <y>10</y>
-          <width>288</width>
-          <height>31</height>
+          <x>190</x>
+          <y>0</y>
+          <width>401</width>
+          <height>61</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="stats_title">
@@ -746,13 +746,13 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>530</x>
           <y>227</y>
           <width>261</width>
-          <height>51</height>
+          <height>81</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="stats_control">
@@ -823,7 +823,7 @@ Statistics</string>
          <set>Qt::AlignCenter</set>
         </property>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>70</x>
@@ -925,7 +925,7 @@ Statistics</string>
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="blank">
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -996,39 +996,13 @@ Statistics</string>
         <property name="spacing">
          <number>0</number>
         </property>
-        <item row="0" column="4">
-         <widget class="QPushButton" name="button_tools">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>15</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Tools</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QPushButton" name="button_alarms">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="button_freeze">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>110</width>
-            <height>0</height>
-           </size>
           </property>
           <property name="maximumSize">
            <size>
@@ -1038,14 +1012,14 @@ Statistics</string>
           </property>
           <property name="font">
            <font>
-            <pointsize>16</pointsize>
+            <pointsize>15</pointsize>
             <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
           <property name="text">
-           <string>	Alarm
-Settings</string>
+           <string>Freeze
+Plots</string>
           </property>
          </widget>
         </item>
@@ -1494,13 +1468,19 @@ Alarms</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="button_freeze">
+        <item row="0" column="4">
+         <widget class="QPushButton" name="button_alarms">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>110</width>
+            <height>0</height>
+           </size>
           </property>
           <property name="maximumSize">
            <size>
@@ -1510,14 +1490,34 @@ Alarms</string>
           </property>
           <property name="font">
            <font>
+            <pointsize>16</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>	Alarm
+Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5">
+         <widget class="QPushButton" name="button_tools">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
             <pointsize>15</pointsize>
             <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
           <property name="text">
-           <string>Freeze
-Plots</string>
+           <string>Tools</string>
           </property>
          </widget>
         </item>
@@ -1539,6 +1539,27 @@ Plots</string>
           <property name="text">
            <string>Silence
 Alarms</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="pushButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>View
+Loops</string>
           </property>
          </widget>
         </item>

@@ -83,26 +83,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="plots_loops">
-      <widget class="QWidget" name="">
-       <property name="geometry">
-        <rect>
-         <x>60</x>
-         <y>40</y>
-         <width>541</width>
-         <height>271</height>
-        </rect>
-       </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="PlotWidget" name="plot_left" native="true"/>
-        </item>
-        <item>
-         <widget class="PlotWidget" name="plot_right" native="true"/>
-        </item>
-       </layout>
-      </widget>
-     </widget>
      <widget class="Alarms" name="alarms_settings"/>
     </widget>
    </item>

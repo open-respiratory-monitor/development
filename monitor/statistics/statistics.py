@@ -36,16 +36,16 @@ class Stats():
         
         self.n_points = len(self.data)
         if self.n_points == 0:
-            self.sterr = 0.0
-            self.pcterr = 0.0
+            self.stderr = np.nan
+            self.pcterr = np.nan
             self.mean = np.nan
             self.min = np.nan
             self.max = np.nan
             
         else:
             
-            self.sterr = self.mean/np.sqrt(self.n_points)
-            self.pcterr = 100.0*(self.sterr/self.mean)
+            self.stderr = np.std(self.data)/np.sqrt(self.n_points)
+            self.pcterr = 100.0*(self.stderr/self.mean)
             self.min = np.min(self.data)
             self.max = np.max(self.data)
             self.mean = np.mean(self.data)

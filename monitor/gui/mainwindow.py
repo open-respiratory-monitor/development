@@ -253,6 +253,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_backstats = self.statsbar.findChild(
             QtWidgets.QPushButton,"button_back")
         
+        '''
+        stats page
+        '''
+        self.stats_mean = self.statspage.findChild(
+            QtWidgets.QLabel,"num_mean")
+        self.stats_min = self.statspage.findChild(
+            QtWidgets.QLabel,"num_min")
+        self.stats_max = self.statspage.findChild(
+            QtWidgets.QLabel,"num_max")
+        self.stats_pcterr = self.statspage.findChild(
+            QtWidgets.QLabel,"num_pcterror")
+        self.stats_stderr = self.statspage.findChild(
+            QtWidgets.QLabel,"num_stderror")
+        self.stats_units = self.statspage.findChild(
+            QtWidgets.QLabel,"num_units")
+        self.statplot = self.statspage.findChild(
+            QtWidgets.QWidget,"plot_stats")
+        
+        # make the plot
+        pen = pg.mkPen(color = 'y',width = 2)
+        pen = pg.mkPen(None)
+        self.statline = self.statplot.plot([0],[0],     pen=pen, symbol='o', symbolSize=20, symbolBrush=('y'))
+        
         # set up the statistics set which will hold useful statistics about the breaths
         self.statset = Statset()
         for name in self.config['statistics']:
@@ -260,7 +283,8 @@ class MainWindow(QtWidgets.QMainWindow):
             #print("found statistic: ",name)
         # set the current stat that will be shown
         
-        self.currentstat = self.config['statistics'][0]
+        self.current_stat = self.config['statistics'][0]
+        print('mainloop: current stat = ',self.current_stat)
         
         '''
         # toolbar buttons
@@ -847,6 +871,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
         
         
+        
+        
         # add the new data for the tracked statistics
         if self.slowdata.newbreath_detected:
         
@@ -858,7 +884,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.statset.add_data_point(name,datapoint)
                 except Exception as e:
                     print(f'main: could not update statistics for {name}',e)
-         
+        self.update_displayed_stats()
         # check for alarms
         """
         self.gui_alarm = GuiAlarms(config, self.monitors)
@@ -874,6 +900,21 @@ class MainWindow(QtWidgets.QMainWindow):
             print('main: could not send data to guialarm: ',e)
             
     ### slots to handle data transfer between threads ###
+    
+    def update_displayed_stats(self):
+        # sends the stats for the selected statistic to the monitor
+        stat = self.statset.stats[self.current_stat]
+        
+        self.stats_mean.setText('%0.2f'%stat.mean)
+        self.stats_min.setText('%0.2f' %stat.min)
+        self.stats_max.setText('%0.2f' %stat.max)
+        self.stats_pcterr.setText('%0.2f' %stat.pcterr)
+        self.stats_stderr.setText('%0.2f' %stat.stderr)
+        self.stats_units.setText(self.config['monitors'][self.current_stat]['units'])
+    
+        
+        self.statline.setData(np.arange(len(stat.data)),  stat.data)
+        
     def update_fast_data(self,data):
         if self.verbose:
             print("main: received new data from fastloop!")
