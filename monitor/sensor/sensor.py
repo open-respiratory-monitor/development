@@ -88,7 +88,9 @@ class sensor(object):
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
 
-        
+        # initial offsets are zero
+        self.p1_offset
+        self.p2_offset
 
         
         # Zero the sensors
@@ -119,11 +121,11 @@ class sensor(object):
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
         return flow
 
-    def rezero(self):
+    def rezero(self, samples = 100):
         # Zeroes the sensors
         # Just takes the current readings and sets them to zero pressure for
         # each sensor
-
+        """
         # Now read out the pressure difference between the sensors
         print('p1_0 = ',self.sensor1.pressure,' mbar')
         print('p1_0 = ',self.sensor1.pressure*self.mbar2cmh20,' cmH20')
@@ -144,6 +146,22 @@ class sensor(object):
         print('p2_0 = ',self.sensor2.pressure,' mbar')
         print('p2_0 = ',self.sensor2.pressure*self.mbar2cmh20,' cmH20')
         print()
+        """
+        p1_arr = []
+        p2_arr = []
+        print(f'sensor: taking {samples} samples to determine ambient pressure...')
+        for i in range(samples):
+            p1_arr.append(self.sensor1.pressure*self.mbar2cmh20)
+            p2_arr.append(self.sensor2.pressure*self.mbar2cmh20)
+            
+        self.p1_offset = np.mean(p1_arr)
+        self.p2_offset = np.mean(p2_arr)
+        
+        # print what's happening
+        print(f'sensor: P1 offset = {self.p1_offset}')
+        print(f'sensor: P2 offset = {self.p2_offset}')
+        
+        
         
     def set_zero_flow(self,samples_to_average = 100):
         dp_arr = []
@@ -173,8 +191,8 @@ class sensor(object):
         """
 
         # Read the pressure sensors and update the values
-        self.p1 = self.sensor1.pressure * self.mbar2cmh20
-        self.p2 = self.sensor2.pressure * self.mbar2cmh20
+        self.p1 = (self.sensor1.pressure * self.mbar2cmh20) - self.p1_offset
+        self.p2 = (self.sensor2.pressure * self.mbar2cmh20) - self.p2_offset
 
         dp = (self.p2 - self.p1) - self.dp_offset
         """
@@ -208,7 +226,7 @@ class fakesensor(object):
         self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 100,unpack = True)
         
         self.linenum = 0
-
+        
         self.lastline = len(self.time_arr)-1
         
         # Load the flow calibration polynomial coefficients
@@ -217,7 +235,9 @@ class fakesensor(object):
         # define the calibration file based on the mouthpiece
         self.set_mouthpiece(mouthpiece)
 
-        
+        # initial offsets are zero
+        self.p1_offset = 0.0
+        self.p2_offset = 0.0        
 
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
@@ -252,7 +272,9 @@ class fakesensor(object):
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
         return flow
 
-    #def rezero(self):
+    def rezero(self):
+        self.p1_offset = self.p1
+        self.p2_offset = self.p2
 
     def set_zero_flow(self,samples_to_average = 100):
         dp_arr = []
@@ -264,8 +286,8 @@ class fakesensor(object):
     def read(self):
 
         # read the fake data from the current line
-        self.p1 = self.p1_arr[self.linenum]
-        self.p2 = self.p2_arr[self.linenum]
+        self.p1 = self.p1_arr[self.linenum] - self.p1_offset
+        self.p2 = self.p2_arr[self.linenum] - self.p2_offset
         self.dp = (self.p2 - self.p1) - self.dp_offset
         # Calculate the flow
         self.flow = self.dp2flow(self.dp)

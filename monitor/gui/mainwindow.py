@@ -164,7 +164,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolbar = self.findChild(QtWidgets.QWidget, "toolbar")
         self.calpage = self.findChild(QtWidgets.QWidget,"calibration")
         self.statspage = self.findChild(QtWidgets.QWidget,"statspage")
-        
+        self.rezero_page = self.findChild(QtWidgets.QWidget,"rezero_page")
         
         '''
         Get the center pane (plots) widgets
@@ -363,6 +363,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_stats = self.toolbar.findChild(
             QtWidgets.QPushButton,"button_stats")
         
+        self.button_rezero = self.calpage.findChild(
+            QtWidgets.QPushButton,"button_rezero")
+        self.button_rezero_yes = self.rezero_page.findChild(
+            QtWidgets.QPushButton,"button_rezero_yes")
+        self.button_rezero_no = self.rezero_page.findChild(
+            QtWidgets.QPushButton,"button_rezero_no")
+        self.num_p1 = self.rezero_page.findChild(
+            QtWidgets.QLabel,"num_p1")
+        self.num_p2 = self.rezero_page.findChild(
+            QtWidgets.QLabel,"num_p2")
+        
         '''
         Frozen Plot menu
         '''
@@ -471,6 +482,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # calibration selection
         self.button_hamilton.toggled.connect(self.togglecal_hamilton)
         self.button_iqspiro.toggled.connect(self.togglecal_iqspiro)
+        self.button_rezero.pressed.connect(self.goto_rezero_page)
+        self.button_rezero_yes.pressed.connect(self.rezero_sensor)
+        self.button_rezero_no.pressed.connect(self.goto_calsettings)
+        self.button_rezero_no.pressed.connect(self.show_toolbar)
+        
         
         # stats page
         self.button_tidal.pressed.connect(lambda: self.set_displayed_stat('tidal_volume'))
@@ -623,7 +639,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.toppane.setCurrentWidget(self.statspage)
         self.show_statsbar()
-    
+    def goto_rezero_page(self):
+        """
+        open up the statistics page
+        """
+        self.toppane.setCurrentWidget(self.rezero_page)
+        self.show_toolbar()
+        
+        
     def show_statsbar(self):
         self.bottombar.setCurrentWidget(self.statsbar)
     
@@ -634,6 +657,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.check_sensor_cal()
         self.toppane.setCurrentWidget(self.calpage)
+        self.show_toolbar()
         #self.calpage.tabs.setFocus()
     
     def togglecal_hamilton(self):
@@ -899,7 +923,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 #self.update_vol_offset.emit(self.slowdata.t_last)
                 #self.restart_looping_plot.emit()
         
-            
+        
         
     def update_monitors(self):
         """
@@ -954,7 +978,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
         
         
-        
+        # update the p1 and p2 values in the rezero plot
+        self.num_p1.setText('%0.3f' %self.fastdata.p1[-1])
+        self.num_p2.setText('%0.3f' %self.fastdata.p2[-1])
         
         # check for alarms
         """
@@ -987,6 +1013,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_displayed_stats()
     
     def update_displayed_stats(self):
+        
+        
         # sends the stats for the selected statistic to the monitor
         stat = self.statset.stats[self.current_stat]
         name = self.config['monitors'][self.current_stat]['name']
@@ -1046,9 +1074,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     #def reset_volume_offset(self):
         #self.fastloop.
-
-    def zero_sensor_flow(self):
-        self.fast_loop.sensor.set_zero_flow()
+        
+    def rezero_sensor(self):
+        '''
+        Set the current pressure and flow to zero
+        '''
+        self.fast_loop.sensor.rezero()
+        #self.goto_calsettings()
 
     def update_slow_data(self,data):
         if True:#self.verbose:
