@@ -73,6 +73,10 @@ class sensor(object):
         self.sensor1.low_pass_enabled = True
         self.sensor2.low_pass_enabled = True
 
+        # Load the flow calibration polynomial coefficients
+        self.main_path = main_path
+
+
         # define the calibration file based on the mouthpiece
         self.set_mouthpiece(mouthpiece)
         
@@ -202,11 +206,14 @@ class fakesensor(object):
         self.datafile = main_path + datafile
         self.verbose = verbose
         self.time_arr,self.p1_arr,self.p2_arr,self.dp_arr = np.loadtxt(self.datafile,delimiter = '\t',skiprows = 100,unpack = True)
-
+        
         self.linenum = 0
 
         self.lastline = len(self.time_arr)-1
-
+        
+        # Load the flow calibration polynomial coefficients
+        self.main_path = main_path
+        
         # define the calibration file based on the mouthpiece
         self.set_mouthpiece(mouthpiece)
 
