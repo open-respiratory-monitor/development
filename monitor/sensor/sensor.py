@@ -171,8 +171,9 @@ class sensor(object):
         print(f'sensor: P1 offset = {self.p1_offset}')
         print(f'sensor: P2 offset = {self.p2_offset}')
         
-        print(f'P1 arr = {p1_arr}')
-        
+        sensor.read()
+        print(f'P1 Corr = {self.p1}')
+        print(f'P2 Corr = {self.p2}')
         self.initialized = True
         
         
