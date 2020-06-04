@@ -154,6 +154,7 @@ class sensor(object):
         """
         p1_arr = []
         p2_arr = []
+        time.sleep(1)
         print(f'sensor: taking {samples} samples to determine ambient pressure...')
         for i in range(samples):
             p1_arr.append(self.sensor1.pressure*self.mbar2cmh20)
