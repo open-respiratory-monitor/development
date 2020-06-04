@@ -309,7 +309,7 @@ alarms:
         
         
     peak:
-        min: 4
+        min: 0
         setmin: 4
         max: 110
         setmax: 40

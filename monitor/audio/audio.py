@@ -64,7 +64,7 @@ class audio_alarm(QtCore.QThread):
     
     def silence(self):
         if self.isRunning():
-            self.terminate()
+            self.quit()
         else:
             pass
     
