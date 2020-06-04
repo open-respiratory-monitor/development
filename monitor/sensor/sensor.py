@@ -160,8 +160,9 @@ class sensor(object):
         p2_arr = np.array(p2_arr)
             
         #set he offset to the mean pressure, but filter out any weird outliers
-        self.p1_offset = np.mean(p1_arr[np.abs(p1_arr) < np.std(p1_arr)])
-        self.p2_offset = np.mean(p2_arr[np.abs(p2_arr) < np.std(p2_arr)])
+        sigma_cut = 2
+        self.p1_offset = np.mean(p1_arr[np.abs(p1_arr) < sigma_cut * np.std(p1_arr)])
+        self.p2_offset = np.mean(p2_arr[np.abs(p2_arr) < sigma_cut * np.std(p2_arr)])
         
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
