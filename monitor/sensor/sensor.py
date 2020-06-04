@@ -153,9 +153,11 @@ class sensor(object):
         for i in range(samples):
             p1_arr.append(self.sensor1.pressure*self.mbar2cmh20)
             p2_arr.append(self.sensor2.pressure*self.mbar2cmh20)
+        
             
-        self.p1_offset = np.mean(p1_arr)
-        self.p2_offset = np.mean(p2_arr)
+        #set he offset to the mean pressure, but filter out any weird outliers
+        self.p1_offset = np.mean(p1_arr[np.abs(p1_arr) < np.std(p1_arr)])
+        self.p2_offset = np.mean(p2_arr[np.abs(p2_arr) < np.std(p2_arr)])
         
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
