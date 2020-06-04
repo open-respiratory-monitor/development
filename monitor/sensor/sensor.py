@@ -167,6 +167,9 @@ class sensor(object):
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
         print(f'sensor: P2 offset = {self.p2_offset}')
+        
+        print(f'P1 arr = {p1_arr}')
+        
         self.initialized = True
         
         
