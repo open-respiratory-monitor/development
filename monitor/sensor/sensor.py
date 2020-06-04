@@ -95,11 +95,14 @@ class sensor(object):
         # holds info about whether the sensor is initialized
         self.initialized = False
         
-        # Zero the sensors
-        self.rezero()
         
         # no flow offset initially
         self.dp_offset = 0.0
+        
+        # Zero the sensors
+        self.rezero()
+        
+        
         
         # Initialize the class values
         self.read()
