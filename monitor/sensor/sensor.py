@@ -89,8 +89,8 @@ class sensor(object):
         self.main_path = main_path
 
         # initial offsets are zero
-        self.p1_offset
-        self.p2_offset
+        self.p1_offset = 0.0
+        self.p2_offset = 0.0
 
         
         # Zero the sensors
