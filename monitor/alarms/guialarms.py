@@ -340,7 +340,7 @@ class GuiAlarms:
             monitor.set_alarm_state(isalarm=False)
             
         self._alarmed_monitors = set() 
-        
+        self.silence_alarms()
      
     def silence_alarms(self):
         '''
