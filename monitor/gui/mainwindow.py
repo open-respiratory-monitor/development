@@ -59,7 +59,8 @@ class MainWindow(QtWidgets.QMainWindow):
     restart_looping_plot = QtCore.pyqtSignal()
     new_sensor_cal = QtCore.pyqtSignal(str)
     new_breath_data = QtCore.pyqtSignal(object) #received new breath data from fastloop
-    
+    sensor_initialized = QtCore.pyqtSignal() # emits once the sensor has done its initial rezero process
+
     
     def __init__(self,  config, main_path, mode = 'normal', diagnostic = False, verbose = False,simulation = False,logdata = False,*args, **kwargs):
 
@@ -113,7 +114,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Start up the fast loop (data acquisition)
         self.fast_loop = data_handler.fast_loop(main_path = self.main_path, config = self.config, simulation = simulation, logdata = logdata,verbose = self.verbose)
-        self.fast_loop.start()
+        
+        
+        
+        # once the sensor is initialized, start the fastloop
+        self.sensor_initialized.connect(self.start_fastloop)
+        while True:
+            if self.fast_loop.sensor.initialized:
+                self.sensor_initialized.emit()
+                print('fastloop: sensor initialized. safe to start data acquisition: ')
+                
+                break
+        
+        # if the fastloop signals it has new data, grab it
         self.fast_loop.newdata.connect(self.update_fast_data)
 
 
@@ -1095,3 +1108,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.verbose:
             print(f"main: received request for data from slowloop")
         self.request_from_slowloop.emit(self.fastdata)
+        
+    def start_fastloop(self):
+        """
+        Starts up the data acquisition fast loop
+        """
+        print('main: starting fastloop')
+        self.fast_loop.start()

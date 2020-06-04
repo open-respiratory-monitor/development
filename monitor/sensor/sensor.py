@@ -92,6 +92,8 @@ class sensor(object):
         self.p1_offset = 0.0
         self.p2_offset = 0.0
 
+        # holds info about whether the sensor is initialized
+        self.initialized = False
         
         # Zero the sensors
         self.rezero()
@@ -164,7 +166,7 @@ class sensor(object):
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
         print(f'sensor: P2 offset = {self.p2_offset}')
-        
+        self.initialized = True
         
         
     def set_zero_flow(self,samples_to_average = 100):
@@ -242,7 +244,11 @@ class fakesensor(object):
         # initial offsets are zero
         self.p1_offset = 0.0
         self.p2_offset = 0.0        
-
+        
+        
+        # start out with the sensor inmitialized
+        self.initialized = True
+        
         # Define the unit conversion factor
         self.mbar2cmh20 = 1.01972
 
@@ -279,7 +285,9 @@ class fakesensor(object):
     def rezero(self):
         self.p1_offset = self.p1
         self.p2_offset = self.p2
-
+        
+        
+        
     def set_zero_flow(self,samples_to_average = 100):
         dp_arr = []
         for i in range(samples_to_average):

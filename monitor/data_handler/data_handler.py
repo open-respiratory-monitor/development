@@ -187,7 +187,6 @@ class fast_loop(QtCore.QThread):
     new_inhale = QtCore.pyqtSignal()
     new_exhale = QtCore.pyqtSignal()
     
-    
     new_breath = QtCore.pyqtSignal(object) 
 
     def __init__(self, main_path, config, correct_vol = False, simulation = False,logdata = False,verbose = False):
@@ -267,7 +266,9 @@ class fast_loop(QtCore.QThread):
             self.sensor = sensor.fakesensor(main_path = self.main_path, verbose = self.verbose)
         else:
             self.sensor = sensor.sensor(main_path = self.main_path,verbose = self.verbose)
-
+        
+        
+            
         # set up file to store sensor data
         if logdata:
             print('creating file to store cal data')
@@ -285,6 +286,9 @@ class fast_loop(QtCore.QThread):
         self.vol_concavity = None
         self.time_last_breath = 0
         self.time_last_exhale = 0
+        
+        
+        
         
     def update_vol_offset(self):
         self.vol_offset = np.min(self.fastdata.vol)
