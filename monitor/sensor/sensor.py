@@ -154,7 +154,9 @@ class sensor(object):
         """
         p1_arr = []
         p2_arr = []
-        time.sleep(1)
+        
+        # needs this sleep! otherwise the first samples are bad and the offset comes out wrong
+        time.sleep(2)
         print(f'sensor: taking {samples} samples to determine ambient pressure...')
         for i in range(samples):
             p1_arr.append(self.sensor1.pressure*self.mbar2cmh20)
@@ -163,13 +165,9 @@ class sensor(object):
         p1_arr = np.array(p1_arr)
         p2_arr = np.array(p2_arr)
             
-        #set he offset to the mean pressure, but filter out any weird outliers
-        
-        # ignore the first few readings they're usually nonsense
-        n_ignore = 10
-        
-        self.p1_offset = np.mean(p1_arr[n_ignore:])
-        self.p2_offset = np.mean(p2_arr[n_ignore:])
+        #set he offset to the mean pressure    
+        self.p1_offset = np.mean(p1_arr)
+        self.p2_offset = np.mean(p2_arr)
         
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
