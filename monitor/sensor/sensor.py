@@ -77,7 +77,7 @@ class sensor(object):
         # Set up the sensors
         self.sensor2 = adafruit_lps35hw.LPS35HW(self.i2c, address = 92)
         self.sensor1 = adafruit_lps35hw.LPS35HW(self.i2c, address = 93)
-        self.sendor3 = adafruit_lps35hw.LPS35HW(self.i2cmux[0]) # this sensor is plugged into the mux on ch 0
+        self.sensor3 = adafruit_lps35hw.LPS35HW(self.i2cmux[0]) # this sensor is plugged into the mux on ch 0
         
         self.sensor1.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
         self.sensor2.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
