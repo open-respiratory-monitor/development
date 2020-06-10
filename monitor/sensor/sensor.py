@@ -26,7 +26,8 @@ import os
 try:
     import board
     import busio
-    import adafruit_lps35hw
+    import adafruit_lps35hw  # pressure sensor
+    import adafruit_tca9548a # i2c mux
 except Exception as e:
     print("could not load sensor board modules: ",e)
 
@@ -41,9 +42,15 @@ class sensor(object):
     Constituents:
         sensor1 = pressure sensor #1
         sensor2 = pressure sensor #2
-
-        p1 = pressure @ sensor 1 in cmH20
-        p2 = pressure @ sensor 2 in cmH20
+        
+        # pressure on either side of flow restrictor/sensor
+        p1 = pressure @ sensor 1 in cmH20 with respect to ambient
+        p2 = pressure @ sensor 2 in cmH20 with respect to ambient
+        
+        # ambient pressure, not in airway
+        p3 = pressure @ sensor 3 in cmH20 
+        
+        
         dp = differential pressure (p2 - p1) in cmH20
         flow = flow in slpm
     """
@@ -63,16 +70,23 @@ class sensor(object):
             # allowed addresses are:
                 # 92 (0x5c - if you put jumper from SDO to Gnd)
                 # 93 (0x5d - default)
-
+        
+        # set up the i2c multiplexer    
+        self.i2cmux = adafruit_tca9548a.TCA9548A(self.i2c)
+        
         # Set up the sensors
         self.sensor2 = adafruit_lps35hw.LPS35HW(self.i2c, address = 92)
         self.sensor1 = adafruit_lps35hw.LPS35HW(self.i2c, address = 93)
-
+        self.sendor3 = adafruit_lps35hw.LPS35HW(self.i2cmux[0]) # this sensor is plugged into the mux on ch 0
+        
         self.sensor1.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
         self.sensor2.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
+        self.sensor3.data_rate = adafruit_lps35hw.DataRate.RATE_75_HZ
+        
         self.sensor1.low_pass_enabled = True
         self.sensor2.low_pass_enabled = True
-
+        self.sensor33.low_pass_enabled = True
+        
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
 
@@ -159,8 +173,8 @@ class sensor(object):
         time.sleep(2)
         print(f'sensor: taking {samples} samples to determine ambient pressure...')
         for i in range(samples):
-            p1_arr.append(self.sensor1.pressure*self.mbar2cmh20)
-            p2_arr.append(self.sensor2.pressure*self.mbar2cmh20)
+            p1_arr.append((self.sensor1.pressure - self.sensor3.pressure)*self.mbar2cmh20)
+            p2_arr.append((self.sensor2.pressure - self.sensor3.pressure)*self.mbar2cmh20)
         
         p1_arr = np.array(p1_arr)
         p2_arr = np.array(p2_arr)
@@ -187,35 +201,17 @@ class sensor(object):
         self.dp_offset = np.mean(dp_arr)
         
         
-    def read(self,n_samples = 1):
-        """
-        p1 = []
-        p2 = []
-        dp = []
-
-        for i in range(n_samples):
-            p1_i = self.sensor1.pressure*self.mbar2cmh20
-            p2_i = self.sensor2.pressure*self.mbar2cmh20
-            dp_i = p2_i - p1_i
-            p1.append(p1_i)
-            p2.append(p2_i)
-            dp.append(dp_i)
-
-        self.p1 = np.median(p1)
-        self.p2 = np.median(p2)
-        self.dp = np.median(dp)
-        """
-
-        # Read the pressure sensors and update the values
-        self.p1 = (self.sensor1.pressure * self.mbar2cmh20) - self.p1_offset
-        self.p2 = (self.sensor2.pressure * self.mbar2cmh20) - self.p2_offset
-
-        dp = (self.p2 - self.p1) - self.dp_offset
-        """
-        if np.abs(dp) < self.dp_thresh:
-            dp = 0.0
-        """
+    def read(self):
         
+        # read the ambient pressure
+        self.p3 = (self.sensor3.pressure * self.mbar2cmh20)
+        
+        # Read the pressure sensors and update the values, the pressures are differential with respect to p3
+        self.p1 = ((self.sensor1.pressure * self.mbar2cmh20) - self.p3) - self.p1_offset
+        self.p2 = ((self.sensor2.pressure * self.mbar2cmh20) - self.p3) - self.p2_offset
+        
+        dp = (self.p2 - self.p1) - self.dp_offset
+                
         self.dp = dp 
 
         # Calculate the flow
