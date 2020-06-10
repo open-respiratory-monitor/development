@@ -85,7 +85,7 @@ class sensor(object):
         
         self.sensor1.low_pass_enabled = True
         self.sensor2.low_pass_enabled = True
-        self.sensor33.low_pass_enabled = True
+        self.sensor3.low_pass_enabled = True
         
         # Load the flow calibration polynomial coefficients
         self.main_path = main_path
