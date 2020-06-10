@@ -207,6 +207,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot_right.setLabel('left',self.config['monitors']['flow']['name'] + '' + self.config['monitors']['tidal_volume']['units'],**labelStyle)
         self.plot_right.setLabel('bottom', 'Pressure' + '' + self.config['monitors']['peep']['units'],**labelStyle)
         
+        
+        
+        
         # Remove mouse interaction with plots
         self.plot_left.setMouseEnabled(x=False, y=False)
         self.plot_left.setMenuEnabled(False)
@@ -1014,8 +1017,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.line_left.setData(self.breathdata.p, self.breathdata.vol)
         self.line_right.setData(self.breathdata.p, self.breathdata.flow)
         
+        # set the axis ranges
+        pmax = np.max(self.breathdata.p)
+        vmax = np.max(self.breathdata.vol)
+        flowmax = np.max(np.abs(self.breathdata.flow))
         
+        if pmax > 40:
+            pmax_plot = pmax
+        else:
+            pmax_plot = 40
         
+        if vmax > 1000:
+            vmax_plot = vmax
+        else:
+            vmax_plot = 1000
+            
+        if flowmax > 75:
+            flowmax_plot = flowmax
+        else:
+            flowmax_plot = 75
+        
+        # left plot (vol vs pressure)
+        self.plot_left.setXRange(-5, pmax_plot)
+        self.plot_left.setYRange(0, vmax_plot)
+        
+        # right plot (flow vs pressure)
+        self.plot_right.setXRange(-5, pmax_plot)
+        self.plot_right.setYRange(-flowmax_plot, flowmax_plot)
         
     ### slots to handle data transfer between threads ###
     
@@ -1044,7 +1072,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statplot.setLabel('left',name,units,**labelStyle)
         self.statplot.setLabel('bottom','Sample ','',**labelStyle)
         self.statline.setData(np.arange(len(stat.data)),  stat.data)
-    
+        self.statplot.enableAutoRange(axis='y', enable=True)
+        
+        
     def update_breath_data(self,data):
         # gets the new breath data from the fast loop
         if self.verbose:
