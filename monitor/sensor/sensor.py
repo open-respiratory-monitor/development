@@ -105,6 +105,7 @@ class sensor(object):
         # initial offsets are zero
         self.p1_offset = 0.0
         self.p2_offset = 0.0
+        self.p_ambient = 0.0
 
         # holds info about whether the sensor is initialized
         self.initialized = False
@@ -139,6 +140,14 @@ class sensor(object):
         flow_sign = np.sign(dp_cmh20)
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
         return flow
+    
+    def update_ambient_pressure(self,samples = 5):
+        #rechecks the ambient pressure
+        p3_arr = []
+        for i in range(samples):
+            p3_arr.append((self.sensor3.pressure))
+        p3_arr = np.array(p3_arr)
+        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20
 
     def rezero(self, samples = 100):
         # Zeroes the sensors
@@ -168,20 +177,26 @@ class sensor(object):
         """
         p1_arr = []
         p2_arr = []
+        p3_arr = []
         
         # needs this sleep! otherwise the first samples are bad and the offset comes out wrong
         time.sleep(2)
         print(f'sensor: taking {samples} samples to determine ambient pressure...')
         for i in range(samples):
-            p1_arr.append((self.sensor1.pressure - self.sensor3.pressure)*self.mbar2cmh20)
-            p2_arr.append((self.sensor2.pressure - self.sensor3.pressure)*self.mbar2cmh20)
-        
+            p1_arr.append((self.sensor1.pressure))
+            p2_arr.append((self.sensor2.pressure))
+            p3_arr.append((self.sensor3.pressure))
         p1_arr = np.array(p1_arr)
         p2_arr = np.array(p2_arr)
+        p3_arr = np.array(p3_arr)
             
+        # get the mean ambient pressure
+        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20
+        
         #set he offset to the mean pressure    
-        self.p1_offset = np.mean(p1_arr)
-        self.p2_offset = np.mean(p2_arr)
+        self.p1_offset = np.mean(p1_arr)*self.mbar2cmh20 - self.p_ambient
+        self.p2_offset = np.mean(p2_arr)*self.mbar2cmh20 - self.p_ambient
+        
         
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
@@ -203,12 +218,11 @@ class sensor(object):
         
     def read(self):
         
-        # read the ambient pressure
-        self.p3 = (self.sensor3.pressure * self.mbar2cmh20)
+        
         
         # Read the pressure sensors and update the values, the pressures are differential with respect to p3
-        self.p1 = ((self.sensor1.pressure * self.mbar2cmh20) - self.p3) - self.p1_offset
-        self.p2 = ((self.sensor2.pressure * self.mbar2cmh20) - self.p3) - self.p2_offset
+        self.p1 = (self.sensor1.pressure * self.mbar2cmh20) - self.p_ambient - self.p1_offset
+        self.p2 = (self.sensor2.pressure * self.mbar2cmh20) - self.p_ambient - self.p2_offset
         
         dp = (self.p2 - self.p1) - self.dp_offset
                 
