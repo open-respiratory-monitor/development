@@ -81,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fast_update_time = 10
             self.slow_update_time = 1000
             self.mode_verbose = False
-        
+         
         # show full screen if running on a raspberry pi
         if 'raspberrypi' in os.uname():
             self.showFullScreen()
@@ -134,6 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop = data_handler.slow_loop(main_path = self.main_path, config = self.config,  verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.new_slowdata.connect(self.update_slow_data)
+        self.slow_loop.new_slowdata.connect(self.fast_loop.sensor.update_ambient_pressure())
         self.slow_loop.new_breathpar.connect(self.update_breath_params)
         # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
