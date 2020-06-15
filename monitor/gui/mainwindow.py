@@ -134,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.slow_loop = data_handler.slow_loop(main_path = self.main_path, config = self.config,  verbose = self.verbose)
         self.slow_loop.start()
         self.slow_loop.new_slowdata.connect(self.update_slow_data)
-        self.slow_loop.new_slowdata.connect(self.fast_loop.sensor.update_ambient_pressure())
+        self.slow_loop.new_slowdata.connect(self.fast_loop.sensor.update_ambient_pressure)
         self.slow_loop.new_breathpar.connect(self.update_breath_params)
         # if the slowloop requests new data, send it the current fastdata
         self.slow_loop.request_fastdata.connect(self.slowloop_request)
