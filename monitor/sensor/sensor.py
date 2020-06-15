@@ -141,7 +141,8 @@ class sensor(object):
         flow = flow_sign*np.polyval(self.flowcal,np.abs(dp_cmh20))
         return flow
     
-    def update_ambient_pressure(self,samples = 5):
+    def update_ambient_pressure(self):
+        samples = 5
         #rechecks the ambient pressure
         p3_arr = []
         for i in range(samples):
