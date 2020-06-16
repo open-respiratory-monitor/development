@@ -266,6 +266,8 @@ class fakesensor(object):
         self.p1_offset = 0.0
         self.p2_offset = 0.0        
         
+        #ambient pressure always zero
+        self.p_ambient = 0.0
         
         # start out with the sensor inmitialized
         self.initialized = True
@@ -307,7 +309,17 @@ class fakesensor(object):
         self.p1_offset = self.p1
         self.p2_offset = self.p2
         
-        
+    
+    def update_ambient_pressure(self):
+        print('sensor: updating ambient pressure')
+        samples = 5
+        #rechecks the ambient pressure
+        p3_arr = []
+        for i in range(samples):
+            p3_arr.append(0.0)
+        p3_arr = np.array(p3_arr)
+        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20    
+    
         
     def set_zero_flow(self,samples_to_average = 100):
         dp_arr = []

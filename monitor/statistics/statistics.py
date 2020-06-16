@@ -71,7 +71,7 @@ class Statset():
     def add_data_point(self,name,data_point):
         self.stats[name].data = add_new_point(self.stats[name].data, data_point, 10)
         self.stats[name].update_stats()
-        print(f'stats: stat[{name}].data = {self.stats[name].data}')
+        #print(f'stats: stat[{name}].data = {self.stats[name].data}')
     
     def reset_all(self):
         """
