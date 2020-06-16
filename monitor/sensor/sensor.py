@@ -148,7 +148,7 @@ class sensor(object):
         for i in range(samples):
             p3_arr.append((self.sensor3.pressure))
         p3_arr = np.array(p3_arr)
-        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20
+        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20*0.0
 
     def rezero(self, samples = 100):
         # Zeroes the sensors
@@ -202,7 +202,7 @@ class sensor(object):
         # print what's happening
         print(f'sensor: P1 offset = {self.p1_offset}')
         print(f'sensor: P2 offset = {self.p2_offset}')
-        
+        print(f'sensor: p_ambient = {self.p_ambient}')
         self.read()
         print(f'P1 Corr = {self.p1}')
         print(f'P2 Corr = {self.p2}')
