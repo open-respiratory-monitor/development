@@ -192,7 +192,7 @@ class sensor(object):
         p3_arr = np.array(p3_arr)
             
         # get the mean ambient pressure
-        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20
+        self.p_ambient = np.mean(p3_arr)*self.mbar2cmh20*0.0
         
         #set he offset to the mean pressure    
         self.p1_offset = np.mean(p1_arr)*self.mbar2cmh20 - self.p_ambient
